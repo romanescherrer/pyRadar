@@ -1,4 +1,3 @@
-import traceback
 import time
 from mmwave.dataloader import DCA1000
 from mmwave.dataloader.radars import TI
@@ -139,7 +138,7 @@ try:
     print(f"file saved to {dspFileName}.npy")
 
 except Exception as e:
-    traceback.print_exc()
+    print(f"Exception inattendue : {e.__class__.__name__} - {e}")
 finally:
     if dca is not None:
         dca.close()

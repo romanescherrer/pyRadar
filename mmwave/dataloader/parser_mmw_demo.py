@@ -588,7 +588,7 @@ def parser_one_mmw_demo_output_packet(data, readNumBytes, config_params, verbose
                     # Samples to calculate static azimuth/elevation heatmap, (all virtual antennas exported)
                     # unused in this demo.
                     if verbose:
-                        print(f"    azimuthElevationHeatMap -unused in this demo")
+                        print("    azimuthElevationHeatMap -unused in this demo")
                 elif tlvType == tlvMsgTypeDef["MSG_TEMPERATURE_STATS"]:
                     # Structure of detailed temperature report as obtained from Radar front end.
                     # tempReportValid is set to return value of rlRfGetTemperatureReport.
