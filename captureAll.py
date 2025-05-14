@@ -4,7 +4,8 @@ from mmwave.dataloader import DCA1000
 from mmwave.dataloader.radars import TI
 import numpy as np
 import datetime
-'''
+
+"""
 # General Process for Capturing Raw Data
 1. Reset the radar and DCA1000 (reset_radar, reset_fpga)
 2. Initialize the radar via UART and configure the corresponding parameters (TI, setFrameCfg)
@@ -44,7 +45,7 @@ The user can change the Ethernet packet delay from 5 µs to 500 µs to achieve d
 "packetDelay_us": 10 (us)   ~   545 (Mbps)
 "packetDelay_us": 25 (us)   ~   325 (Mbps)
 "packetDelay_us": 50 (us)   ~   193 (Mbps)
-'''
+"""
 dca = None
 radar = None
 
@@ -58,13 +59,19 @@ try:
     time.sleep(1)
 
     # 2. Initialize the radar and configure the corresponding parameters through UART
-    dca_config_file = "configFiles/cf.json" # Remember to set lvdsMode in cf.json to 2. xWR1843 only supports 2 LVDS lanes.
-    radar_config_file = "configFiles/xWR1843_profile_3D.cfg" # Remember to set the third parameter of lvdsStreamCfg to 1 to enable LVDS data transmission
-    numframes=10
-    # Remember to change the port number. 
+    dca_config_file = "configFiles/cf.json"  # Remember to set lvdsMode in cf.json to 2. xWR1843 only supports 2 LVDS lanes.
+    radar_config_file = "configFiles/xWR1843_profile_3D.cfg"  # Remember to set the third parameter of lvdsStreamCfg to 1 to enable LVDS data transmission
+    numframes = 10
+    # Remember to change the port number.
     # verbose=True will display all serial port commands and responses sent to the millimeter wave radar board.
-    radar = TI(cli_loc='COM4', data_loc='COM5',data_baud=921600,config_file=radar_config_file,verbose=True)
-    # After setting the number of frames, the radar will stop automatically. 
+    radar = TI(
+        cli_loc="COM4",
+        data_loc="COM5",
+        data_baud=921600,
+        config_file=radar_config_file,
+        verbose=True,
+    )
+    # After setting the number of frames, the radar will stop automatically.
     # There is no need to send a stop command to the FPGA, but you still need to send a stop command to the radar.
     radar.setFrameCfg(numframes)
 
@@ -73,12 +80,14 @@ try:
 
     # 4. Send FPGA configuration instructions through the network port UDP
     # 5. Send configuration record data packet instructions through the network port UDP
-    '''
+    """
     dca.sys_alive_check()             # Check whether the FPGA is connected and working properly
     dca.config_fpga(dca_config_file)  # Configuring FPGA Parameters
     dca.config_record(dca_config_file)# Configuring record parameters
-    '''
-    dca.configure(dca_config_file,radar_config_file)  # This function completes all the above operations
+    """
+    dca.configure(
+        dca_config_file, radar_config_file
+    )  # This function completes all the above operations
 
     # Press Enter to start collecting
     input("press ENTER to start capture...")
@@ -98,15 +107,15 @@ try:
     # 10. Wait for the UDP data packet receiving thread to end + parse the original data
     # data_buf = dca.fastRead_in_Cpp_async_wait(numframes_out,sortInC_out) # 【采集方法一】2、等待异步线程结束
     # [Collection method 2] Synchronous call (the package before the start of collection will be lost, but the compatibility is better)
-    data_buf = dca.fastRead_in_Cpp(numframes,sortInC=True) 
+    data_buf = dca.fastRead_in_Cpp(numframes, sortInC=True)
     end = time.time()
-    print("time elapsed(s):",end-start)
+    print("time elapsed(s):", end - start)
 
     # 11. Save the original data to a file
-    filename="raw_data_"+startTime.strftime('%Y-%m-%d-%H-%M-%S')+".bin"
+    filename = "raw_data_" + startTime.strftime("%Y-%m-%d-%H-%M-%S") + ".bin"
     data_buf.tofile(filename)
-    print("file saved to",filename)
-    
+    print("file saved to", filename)
+
     # 12. DCA stops acquisition and automatically stops after setting the number of frames, without sending a stop command to the FPGA
     # dca.stream_stop()
     # 13. Turn off the radar via the serial port
@@ -114,20 +123,20 @@ try:
     # 14. Stop receiving serial port data
     radar.stop_read_process()
 
-    # 15. Parse the point cloud and other data processed by the on-chip DSP received from the serial port. 
+    # 15. Parse the point cloud and other data processed by the on-chip DSP received from the serial port.
     # verbose=True will display detailed information of each frame during the processing.
-    DSP_Processed_data=radar.post_process_data_buf(verbose=False)
+    DSP_Processed_data = radar.post_process_data_buf(verbose=False)
 
     # The parsed point cloud data is in the variable DSP_Processed_data
     # print(DSP_Processed_data)
 
     # The unparsed serial port raw data is in the radar.byteBuffer variable
     # print(radar.byteBuffer)
-    
+
     # Save the parsed serial port data to a file and load it using np.load('xxx.npy', allow_pickle=True)
-    dspFileName = "DSP_data_"+startTime.strftime('%Y-%m-%d-%H-%M-%S')
+    dspFileName = "DSP_data_" + startTime.strftime("%Y-%m-%d-%H-%M-%S")
     np.save(dspFileName, DSP_Processed_data)
-    print(f'file saved to {dspFileName}.npy')
+    print(f"file saved to {dspFileName}.npy")
 
 except Exception as e:
     traceback.print_exc()

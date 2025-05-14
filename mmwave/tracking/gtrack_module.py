@@ -11,7 +11,7 @@ def module_predict(inst):
     for i in inst.activeList:
         uid = i.data
         if uid > inst.maxNumTracks:
-            raise ValueError('module_predict')
+            raise ValueError("module_predict")
         gtrack_unit.unit_predict(inst.hTrack[uid])
 
 
@@ -20,11 +20,13 @@ def module_predict(inst):
 def module_associate(inst, point, num):
     for i in inst.activeList:
         uid = i.data
-        gtrack_unit.unit_score(inst.hTrack[uid], point, inst.bestScore, inst.bestIndex, num)
+        gtrack_unit.unit_score(
+            inst.hTrack[uid], point, inst.bestScore, inst.bestIndex, num
+        )
 
 
 # This is a MODULE level allocation function. The function is called by
-# external step function to allocate new targets for the non-associated 
+# external step function to allocate new targets for the non-associated
 # measurement points
 def module_allocate(inst, point, num):
     un = np.zeros(shape=(3,), dtype=np.float32)
@@ -35,7 +37,9 @@ def module_allocate(inst, point, num):
             t_elem = inst.freeList[0] if inst.freeList else None
             if t_elem is None:
                 if (inst.verbose & ekf_utils.VERBOSE_WARNING_INFO) != 0:
-                    raise ValueError('Maximum number of tracks reached!, module_allocate')
+                    raise ValueError(
+                        "Maximum number of tracks reached!, module_allocate"
+                    )
                 return
             inst.allocIndex[0] = n
             alloc_num = 1
@@ -50,11 +54,16 @@ def module_allocate(inst, point, num):
                 if inst.bestIndex[k] == ekf_utils.gtrack_ID_POINT_NOT_ASSOCIATED:
                     uk[0] = np.float32(point[k].range)
                     uk[1] = np.float32(point[k].angle)
-                    uk[2] = ekf_utils.gtrack_unrollRadialVelocity(inst.params.maxRadialVelocity, un[2],
-                                                                  point[k].doppler)
+                    uk[2] = ekf_utils.gtrack_unrollRadialVelocity(
+                        inst.params.maxRadialVelocity, un[2], point[k].doppler
+                    )
 
                     if np.abs(uk[2] - un[2]) < inst.params.allocationParams.maxVelThre:
-                        dist = np.float32(un[0] * un[0] + uk[0] * uk[0] - 2 * un[0] * uk[0] * np.cos(un[1] - uk[1]))
+                        dist = np.float32(
+                            un[0] * un[0]
+                            + uk[0] * uk[0]
+                            - 2 * un[0] * uk[0] * np.cos(un[1] - uk[1])
+                        )
                         if dist < inst.params.allocationParams.maxDistanceThre:
                             inst.allocIndex[alloc_num] = k
 
@@ -68,9 +77,11 @@ def module_allocate(inst, point, num):
                             un[0] = np.float32(un_sum[0] / alloc_num)
                             un[1] = np.float32(un_sum[1] / alloc_num)
                             un[2] = np.float32(un_sum[2] / alloc_num)
-            if (alloc_num > inst.params.allocationParams.pointsThre) and \
-                    (alloc_snr > inst.params.allocationParams.snrThre) and \
-                    (np.abs(un[2]) > inst.params.allocationParams.velocityThre):
+            if (
+                (alloc_num > inst.params.allocationParams.pointsThre)
+                and (alloc_snr > inst.params.allocationParams.snrThre)
+                and (np.abs(un[2]) > inst.params.allocationParams.velocityThre)
+            ):
                 for k in range(alloc_num):
                     inst.bestIndex[inst.allocIndex[k]] = t_elem.data
 
@@ -79,12 +90,14 @@ def module_allocate(inst, point, num):
 
                 t_elem = inst.freeList.pop(0)
 
-                gtrack_unit.unit_start(inst.hTrack[t_elem.data], inst.heartBeat, inst.targetNumTotal, un)
+                gtrack_unit.unit_start(
+                    inst.hTrack[t_elem.data], inst.heartBeat, inst.targetNumTotal, un
+                )
 
                 inst.activeList.append(t_elem)
 
 
-# This is a MODULE level update function. The function is called by external 
+# This is a MODULE level update function. The function is called by external
 # step function to perform unit level kalman filter updates
 def module_update(inst, point, var, num):
     # NotImplemented
@@ -93,7 +106,9 @@ def module_update(inst, point, var, num):
     need_removal = []
     for i in inst.activeList:
         uid = i.data
-        state = gtrack_unit.unit_update(inst.hTrack[uid], point, var, inst.bestIndex, num)
+        state = gtrack_unit.unit_update(
+            inst.hTrack[uid], point, var, inst.bestIndex, num
+        )
         if state == ekf_utils.TrackState().TRACK_STATE_FREE:
             need_removal.append(i)
             inst.targetNumCurrent -= 1
@@ -146,6 +161,7 @@ def module_report(inst, t, t_num):
 #      This function populates the array with the timestamps of free runing CPU cycles count.
 #      Shall be set to NULL when benchmarking isn't required.
 
+
 def step(handle, point, var, m_num, t, t_num, m_index):
     inst = handle
     inst.heartBeat += 1
@@ -161,7 +177,12 @@ def step(handle, point, var, m_num, t, t_num, m_index):
         if inst.params.sceneryParams.numBoundaryBoxes != 0:
             inst.bestIndex[n] = ekf_utils.gtrack_ID_POINT_BEHIND_THE_WALL
             for numBoxes in range(inst.params.sceneryParams.numBoundaryBoxes):
-                if ekf_utils.isPointInsideBox(x_pos, y_pos, inst.params.sceneryParams.boundaryBox[numBoxes]) == 1:
+                if (
+                    ekf_utils.isPointInsideBox(
+                        x_pos, y_pos, inst.params.sceneryParams.boundaryBox[numBoxes]
+                    )
+                    == 1
+                ):
                     inst.bestIndex[n] = ekf_utils.gtrack_ID_POINT_NOT_ASSOCIATED
                     break
         else:

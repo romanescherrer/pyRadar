@@ -38,19 +38,19 @@ def parse_raw_adc(source_fp, dest_fp):
         packets_recv += 1
 
         # Index binary data
-        sequence_info = buff[buff_pos:buff_pos + 4]
-        length_info = buff[buff_pos + 4:buff_pos + 8]
+        sequence_info = buff[buff_pos : buff_pos + 4]
+        length_info = buff[buff_pos + 4 : buff_pos + 8]
         # bytes_info = buff[buff_pos + 8:buff_pos + 14]
         buff_pos += 14
 
         # Unpack binary data
-        packet_num = struct.unpack('<1l', sequence_info)[0]
-        packet_length = struct.unpack('<l', length_info.tobytes())[0]
+        packet_num = struct.unpack("<1l", sequence_info)[0]
+        packet_length = struct.unpack("<l", length_info.tobytes())[0]
         # curr_bytes_read = struct.unpack('<Q', np.pad(bytes_info, (0, 2), mode='constant').tobytes())[0]
 
         # Build data
         if packets_recv == packet_num:
-            adc_data.append(buff[buff_pos:buff_pos + packet_length])
+            adc_data.append(buff[buff_pos : buff_pos + packet_length])
             buff_pos += packet_length
 
         # Zero fill array
@@ -58,32 +58,38 @@ def parse_raw_adc(source_fp, dest_fp):
             while packets_recv < packet_num:
                 adc_data.append(np.zeros(packet_length))
                 packets_recv += 1
-            adc_data.append(buff[buff_pos:buff_pos + packet_length])
+            adc_data.append(buff[buff_pos : buff_pos + packet_length])
             buff_pos += packet_length
 
         # Place packet in correct place
         else:
-            adc_data[packet_num-1] = buff[buff_pos:buff_pos + packet_length]
+            adc_data[packet_num - 1] = buff[buff_pos : buff_pos + packet_length]
             buff_pos += packet_length
 
     adc_data = np.concatenate(adc_data)
 
     # Write data to destination
-    fp = open(dest_fp, 'wb')
+    fp = open(dest_fp, "wb")
 
     if adc_data.itemsize == 0:
         buffer_size = 0
     else:
         # Set buffer size to 16 MiB to hide the Python loop overhead.
-        buffer_size = max(16 * 1024 ** 2 // adc_data.itemsize, 1)
+        buffer_size = max(16 * 1024**2 // adc_data.itemsize, 1)
 
     if adc_data.flags.f_contiguous and not adc_data.flags.c_contiguous:
         for chunk in np.nditer(
-                adc_data, flags=['external_loop', 'buffered', 'zerosize_ok'],
-                buffersize=buffer_size, order='F'):
-            fp.write(chunk.tobytes('C'))
+            adc_data,
+            flags=["external_loop", "buffered", "zerosize_ok"],
+            buffersize=buffer_size,
+            order="F",
+        ):
+            fp.write(chunk.tobytes("C"))
     else:
         for chunk in np.nditer(
-                adc_data, flags=['external_loop', 'buffered', 'zerosize_ok'],
-                buffersize=buffer_size, order='C'):
-            fp.write(chunk.tobytes('C'))
+            adc_data,
+            flags=["external_loop", "buffered", "zerosize_ok"],
+            buffersize=buffer_size,
+            order="C",
+        ):
+            fp.write(chunk.tobytes("C"))

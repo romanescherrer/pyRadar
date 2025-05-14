@@ -12,6 +12,7 @@ class ListElem:
         data (float or int): Current element data
 
     """
+
     def __init__(self):
         self.data = 0
 
@@ -38,11 +39,12 @@ class ListElem:
 #      Handle to GTRACK module
 #
 
+
 def create(config):
     if config.maxNumPoints > ekf_utils.gtrack_NUM_POINTS_MAX:
-        raise ValueError('maxNumPoints exceeded, create')
+        raise ValueError("maxNumPoints exceeded, create")
     if config.maxNumTracks > ekf_utils.gtrack_NUM_TRACKS_MAX:
-        raise ValueError('maxNumTracks exceeded, create')
+        raise ValueError("maxNumTracks exceeded, create")
 
     inst = ekf_utils.GtrackModuleInstance()
 
@@ -52,17 +54,37 @@ def create(config):
     inst.heartBeat = 0
 
     # default parameters
-    inst.params.gatingParams = ekf_utils.gtrack_gatingParams(volume=2., params=[(3., 2., 0.)])
-    inst.params.stateParams = ekf_utils.gtrack_stateParams(det2actThre=3, det2freeThre=3, active2freeThre=5,
-                                                           static2freeThre=5, exit2freeThre=5)
-    inst.params.unrollingParams = ekf_utils.gtrack_unrollingParams(alpha=0.5, confidence=0.1)
-    inst.params.allocationParams = ekf_utils.gtrack_allocationParams(snrThre=100., velocityThre=0.5, pointsThre=5,
-                                                                     maxDistanceThre=1., maxVelThre=2.)
-    inst.params.variationParams = ekf_utils.gtrack_varParams(lengthStd=np.float32(1. / 3.46),
-                                                             widthStd=np.float32(1. / 3.46), dopplerStd=2.)
-    inst.params.sceneryParams = ekf_utils.gtrack_sceneryParams(numBoundaryBoxes=0, numStaticBoxes=0,
-                                                               bound_box=[(0., 0., 0., 0.), (0., 0., 0., 0.)],
-                                                               static_box=[(0., 0., 0., 0.), (0., 0., 0., 0.)])
+    inst.params.gatingParams = ekf_utils.gtrack_gatingParams(
+        volume=2.0, params=[(3.0, 2.0, 0.0)]
+    )
+    inst.params.stateParams = ekf_utils.gtrack_stateParams(
+        det2actThre=3,
+        det2freeThre=3,
+        active2freeThre=5,
+        static2freeThre=5,
+        exit2freeThre=5,
+    )
+    inst.params.unrollingParams = ekf_utils.gtrack_unrollingParams(
+        alpha=0.5, confidence=0.1
+    )
+    inst.params.allocationParams = ekf_utils.gtrack_allocationParams(
+        snrThre=100.0,
+        velocityThre=0.5,
+        pointsThre=5,
+        maxDistanceThre=1.0,
+        maxVelThre=2.0,
+    )
+    inst.params.variationParams = ekf_utils.gtrack_varParams(
+        lengthStd=np.float32(1.0 / 3.46),
+        widthStd=np.float32(1.0 / 3.46),
+        dopplerStd=2.0,
+    )
+    inst.params.sceneryParams = ekf_utils.gtrack_sceneryParams(
+        numBoundaryBoxes=0,
+        numStaticBoxes=0,
+        bound_box=[(0.0, 0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 0.0)],
+        static_box=[(0.0, 0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 0.0)],
+    )
 
     # user overwrites default parameters
     if config.advParams is not None:
@@ -71,11 +93,17 @@ def create(config):
         if config.advParams.stateParams is not None:
             inst.params.stateParams = copy.deepcopy(config.advParams.stateParams)
         if config.advParams.unrollingParams is not None:
-            inst.params.unrollingParams = copy.deepcopy(config.advParams.unrollingParams)
+            inst.params.unrollingParams = copy.deepcopy(
+                config.advParams.unrollingParams
+            )
         if config.advParams.allocationParams is not None:
-            inst.params.allocationParams = copy.deepcopy(config.advParams.allocationParams)
+            inst.params.allocationParams = copy.deepcopy(
+                config.advParams.allocationParams
+            )
         if config.advParams.variationParams is not None:
-            inst.params.variationParams = copy.deepcopy(config.advParams.variationParams)
+            inst.params.variationParams = copy.deepcopy(
+                config.advParams.variationParams
+            )
         if config.advParams.sceneryParams is not None:
             inst.params.sceneryParams = copy.deepcopy(config.advParams.sceneryParams)
 
@@ -92,47 +120,151 @@ def create(config):
     elif config.verbose == ekf_utils.gtrack_VERBOSE_TYPE().gtrack_VERBOSE_ERROR:
         inst.params.verbose = ekf_utils.VERBOSE_ERROR_INFO
     elif config.verbose == ekf_utils.gtrack_VERBOSE_TYPE().gtrack_VERBOSE_WARNING:
-        inst.params.verbose = (ekf_utils.VERBOSE_ERROR_INFO) | (ekf_utils.VERBOSE_WARNING_INFO)
+        inst.params.verbose = (ekf_utils.VERBOSE_ERROR_INFO) | (
+            ekf_utils.VERBOSE_WARNING_INFO
+        )
     else:
         if config.verbose == ekf_utils.gtrack_VERBOSE_TYPE().gtrack_VERBOSE_DEBUG:
-            inst.params.verbose = (ekf_utils.VERBOSE_ERROR_INFO) | (ekf_utils.VERBOSE_WARNING_INFO) | (
-                ekf_utils.VERBOSE_DEBUG_INFO) | (ekf_utils.VERBOSE_UNROLL_INFO) | (ekf_utils.VERBOSE_STATE_INFO)
+            inst.params.verbose = (
+                (ekf_utils.VERBOSE_ERROR_INFO)
+                | (ekf_utils.VERBOSE_WARNING_INFO)
+                | (ekf_utils.VERBOSE_DEBUG_INFO)
+                | (ekf_utils.VERBOSE_UNROLL_INFO)
+                | (ekf_utils.VERBOSE_STATE_INFO)
+            )
         elif config.verbose == ekf_utils.gtrack_VERBOSE_TYPE().gtrack_VERBOSE_MATRIX:
-            inst.params.verbose = (ekf_utils.VERBOSE_ERROR_INFO) | (ekf_utils.VERBOSE_WARNING_INFO) | (
-                ekf_utils.VERBOSE_DEBUG_INFO) | (ekf_utils.VERBOSE_MATRIX_INFO)
+            inst.params.verbose = (
+                (ekf_utils.VERBOSE_ERROR_INFO)
+                | (ekf_utils.VERBOSE_WARNING_INFO)
+                | (ekf_utils.VERBOSE_DEBUG_INFO)
+                | (ekf_utils.VERBOSE_MATRIX_INFO)
+            )
         elif config.verbose == ekf_utils.gtrack_VERBOSE_TYPE().gtrack_VERBOSE_MAXIMUM:
-            inst.params.verbose = (ekf_utils.VERBOSE_ERROR_INFO) | (ekf_utils.VERBOSE_WARNING_INFO) | (
-                ekf_utils.VERBOSE_DEBUG_INFO) | (ekf_utils.VERBOSE_MATRIX_INFO) | (ekf_utils.VERBOSE_UNROLL_INFO) | (
-                                      ekf_utils.VERBOSE_STATE_INFO) | (ekf_utils.VERBOSE_ASSOSIATION_INFO)
+            inst.params.verbose = (
+                (ekf_utils.VERBOSE_ERROR_INFO)
+                | (ekf_utils.VERBOSE_WARNING_INFO)
+                | (ekf_utils.VERBOSE_DEBUG_INFO)
+                | (ekf_utils.VERBOSE_MATRIX_INFO)
+                | (ekf_utils.VERBOSE_UNROLL_INFO)
+                | (ekf_utils.VERBOSE_STATE_INFO)
+                | (ekf_utils.VERBOSE_ASSOSIATION_INFO)
+            )
 
     dt = np.float32(config.deltaT)
     dt2 = np.float32(np.power(dt, 2))
     dt3 = np.float32(np.power(dt, 3))
     dt4 = np.float32(np.power(dt, 4))
 
-    f4 = np.array([1., 0., dt, 0.,
-                   0., 1., 0., dt,
-                   0., 0., 1., 0.,
-                   0., 0., 0., 1.], dtype=np.float32)
+    f4 = np.array(
+        [1.0, 0.0, dt, 0.0, 0.0, 1.0, 0.0, dt, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+        dtype=np.float32,
+    )
 
-    q4 = np.array([dt4 / 4, 0., dt3 / 2, 0.,
-                   0., dt4 / 4, 0., dt3 / 2,
-                   dt3 / 2, 0., dt2, 0.,
-                   0., dt3 / 2, 0., dt2], dtype=np.float32)
+    q4 = np.array(
+        [
+            dt4 / 4,
+            0.0,
+            dt3 / 2,
+            0.0,
+            0.0,
+            dt4 / 4,
+            0.0,
+            dt3 / 2,
+            dt3 / 2,
+            0.0,
+            dt2,
+            0.0,
+            0.0,
+            dt3 / 2,
+            0.0,
+            dt2,
+        ],
+        dtype=np.float32,
+    )
 
-    f6 = np.array([1., 0., dt, 0., dt2 / 2, 0.,
-                   0., 1., 0., dt, 0., dt2 / 2,
-                   0., 0., 1., 0., dt, 0.,
-                   0., 0., 0., 1., 0., dt,
-                   0., 0., 0., 0., 1., 0.,
-                   0., 0., 0., 0., 0., 1.], dtype=np.float32)
+    f6 = np.array(
+        [
+            1.0,
+            0.0,
+            dt,
+            0.0,
+            dt2 / 2,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            dt,
+            0.0,
+            dt2 / 2,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            dt,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            dt,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+        ],
+        dtype=np.float32,
+    )
 
-    q6 = np.array([dt4 / 4, 0., dt3 / 2, 0., dt2 / 2, 0.,
-                   0., dt4 / 4, 0., dt3 / 2, 0., dt2 / 2,
-                   dt3 / 2, 0., dt2, 0., dt, 0.,
-                   0., dt3 / 2, 0., dt2, 0., dt,
-                   dt2 / 2, 0., dt, 0., 1., 0.,
-                   0., dt2 / 2, 0., dt, 0., 1.], dtype=np.float32)
+    q6 = np.array(
+        [
+            dt4 / 4,
+            0.0,
+            dt3 / 2,
+            0.0,
+            dt2 / 2,
+            0.0,
+            0.0,
+            dt4 / 4,
+            0.0,
+            dt3 / 2,
+            0.0,
+            dt2 / 2,
+            dt3 / 2,
+            0.0,
+            dt2,
+            0.0,
+            dt,
+            0.0,
+            0.0,
+            dt3 / 2,
+            0.0,
+            dt2,
+            0.0,
+            dt,
+            dt2 / 2,
+            0.0,
+            dt,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            dt2 / 2,
+            0.0,
+            dt,
+            0.0,
+            1.0,
+        ],
+        dtype=np.float32,
+    )
 
     inst.params.F4 = copy.deepcopy(f4)
     inst.params.Q4 = copy.deepcopy(q4)
@@ -141,7 +273,7 @@ def create(config):
 
     inst.hTrack = [ekf_utils.GtrackUnitInstance() for _ in range(inst.maxNumTracks)]
 
-    inst.bestScore = np.array([0. for _ in range(inst.maxNumPoints)], dtype=np.float32)
+    inst.bestScore = np.array([0.0 for _ in range(inst.maxNumPoints)], dtype=np.float32)
 
     inst.bestIndex = np.array([0 for _ in range(inst.maxNumPoints)], dtype=np.uint8)
 

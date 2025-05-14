@@ -15,8 +15,14 @@ from . import compensation
 from . import utils
 
 
-def doppler_resolution(band_width, start_freq_const=77, ramp_end_time=62, idle_time_const=100, num_loops_per_frame=128,
-                       num_tx_antennas=3):
+def doppler_resolution(
+    band_width,
+    start_freq_const=77,
+    ramp_end_time=62,
+    idle_time_const=100,
+    num_loops_per_frame=128,
+    num_tx_antennas=3,
+):
     """Calculate the doppler resolution for the given radar configuration.
 
     Args:
@@ -37,7 +43,8 @@ def doppler_resolution(band_width, start_freq_const=77, ramp_end_time=62, idle_t
     center_frequency = start_freq_const * 1e9 + band_width / 2
     chirp_interval = (ramp_end_time + idle_time_const) * 1e-6
     doppler_resolution = light_speed_meter_per_sec / (
-                2 * num_loops_per_frame * num_tx_antennas * center_frequency * chirp_interval)
+        2 * num_loops_per_frame * num_tx_antennas * center_frequency * chirp_interval
+    )
 
     return doppler_resolution
 
@@ -66,12 +73,14 @@ def separate_tx(signal, num_tx, vx_axis=1, axis=0):
     return out.transpose(reordering)
 
 
-def doppler_processing(radar_cube,
-                       num_tx_antennas=2,
-                       clutter_removal_enabled=False,
-                       interleaved=True,
-                       window_type_2d=None,
-                       accumulate=True):
+def doppler_processing(
+    radar_cube,
+    num_tx_antennas=2,
+    clutter_removal_enabled=False,
+    interleaved=True,
+    window_type_2d=None,
+    accumulate=True,
+):
     """Perform 2D FFT on the radar_cube.
 
     Interleave the radar_cube, perform optional windowing and 2D FFT on the radar_cube. Optional antenna couping
@@ -80,7 +89,7 @@ def doppler_processing(radar_cube,
 
     Args:
         radar_cube (ndarray): Output of the 1D FFT. If not interleaved beforehand, it has the shape of
-            (numChirpsPerFrame, numRxAntennas, numRangeBins). Otherwise, it has the shape of 
+            (numChirpsPerFrame, numRxAntennas, numRangeBins). Otherwise, it has the shape of
             (numRangeBins, numVirtualAntennas, num_doppler_bins). It is assumed that after interleaving the doppler
             dimension is located at the last axis.
         num_tx_antennas (int): Number of transmitter antennas. This affects how interleaving is performed.
@@ -91,7 +100,7 @@ def doppler_processing(radar_cube,
             that this interleaving is only applicable to TDM radar, i.e. each tx emits the chirp sequentially.
         window_type_2d (mmwave.dsp.utils.Window): Optional windowing type before doppler FFT.
         accumulate (boolean): Flag to reduce the numVirtualAntennas dimension.
-    
+
     Returns:
         detMatrix (ndarray): (numRangeBins, num_doppler_bins) complete range-dopper information. Original datatype is
                              uint16_t. Note that azimuthStaticHeatMap can be extracted from zero-doppler index for
@@ -102,13 +111,13 @@ def doppler_processing(radar_cube,
 
     if interleaved:
         # radar_cube is interleaved in the first dimension (for 2 tx and 0-based indexing, odd are the chirps from tx1,
-        # and even are from tx2) so it becomes ( , numVirtualAntennas, numADCSamples), where 
+        # and even are from tx2) so it becomes ( , numVirtualAntennas, numADCSamples), where
         # numChirpsPerFrame = num_doppler_bins * num_tx_antennas as designed.
         # Antennas associated to tx1 (Ping) are 0:4 and to tx2 (Pong) are 5:8.
         fft2d_in = separate_tx(radar_cube, num_tx_antennas, vx_axis=1, axis=0)
     else:
         fft2d_in = radar_cube
-        
+
     # (Optional) Static Clutter Removal
     if clutter_removal_enabled:
         fft2d_in = compensation.clutter_removal(fft2d_in, axis=0)
@@ -138,21 +147,23 @@ def doppler_processing(radar_cube,
         return fft2d_log_abs, aoa_input
 
 
-def doppler_estimation(radar_cube,
-                       beam_weights,
-                       num_tx_antennas=2,
-                       clutter_removal_enabled=False,
-                       interleaved=False,
-                       window_type_2d=None):
+def doppler_estimation(
+    radar_cube,
+    beam_weights,
+    num_tx_antennas=2,
+    clutter_removal_enabled=False,
+    interleaved=False,
+    window_type_2d=None,
+):
     """Perform doppler estimation on the weighted sum of range FFT output across all virtual antennas.
-    
-    In contrast to directly computing doppler FFT from the output of range FFT, this function combines it across all 
+
+    In contrast to directly computing doppler FFT from the output of range FFT, this function combines it across all
     the virtual receivers first using the weights generated from beamforming. Then FFT is performed and argmax is taken
     across each doppler axis to return the indices of max doppler values.
-    
+
     Args:
         radar_cube (ndarray): Output of the 1D FFT with only ranges on detected objects. If not interleaved beforehand,
-            it has the shape of (numChirpsPerFrame, numRxAntennas, numDetObjs). Otherwise, it has the shape of 
+            it has the shape of (numChirpsPerFrame, numRxAntennas, numDetObjs). Otherwise, it has the shape of
             (numDetObjs, numVirtualAntennas, num_doppler_bins). It is assumed that after interleaving the doppler
             dimension is located at the last axis.
         beam_weights (ndarray): Weights to sum up the radar_cube across the virtual receivers. It is from the
@@ -164,7 +175,7 @@ def doppler_estimation(radar_cube,
             will transform it such that it becomes (numDetObjs, numVirtualAntennas, num_doppler_bins). Note that this
             interleaving is only appliable to TDM radar, i.e. each tx emits the chirp sequentially.
         window_type_2d (string): Optional windowing type before doppler FFT.
-    
+
     Returns:
         doppler_est (ndarray): (numDetObjs) Doppler index for each detected objects. Positive index means moving away
                                from radar while negative index means moving towards the radar.
@@ -177,9 +188,14 @@ def doppler_estimation(radar_cube,
         # numChirpsPerFrame = num_doppler_bins * num_tx_antennas as designed.
         # Antennas associated to tx1 (Ping) are 0:4 and to tx2 (Pong) are 5:8.
         if num_tx_antennas == 2:
-            fft2d_in = np.concatenate((radar_cube[0::2, ...], radar_cube[1::2, ...]), axis=1)
+            fft2d_in = np.concatenate(
+                (radar_cube[0::2, ...], radar_cube[1::2, ...]), axis=1
+            )
         elif num_tx_antennas == 3:
-            fft2d_in = np.concatenate((radar_cube[0::3, ...], radar_cube[1::3, ...], radar_cube[2::3, ...]), axis=1)
+            fft2d_in = np.concatenate(
+                (radar_cube[0::3, ...], radar_cube[1::3, ...], radar_cube[2::3, ...]),
+                axis=1,
+            )
 
         # transpose to (numRangeBins, numVirtualAntennas, num_doppler_bins)
         fft2d_in = np.transpose(fft2d_in, axes=(2, 1, 0))
@@ -191,7 +207,7 @@ def doppler_estimation(radar_cube,
         fft2d_in = compensation.clutter_removal(fft2d_in)
 
     # Weighted sum across all virtual receivers.
-    fft2d_in = np.einsum('ijk,jk->ik', fft2d_in, beam_weights)
+    fft2d_in = np.einsum("ijk,jk->ik", fft2d_in, beam_weights)
 
     # Windowing 16x32
     if window_type_2d:

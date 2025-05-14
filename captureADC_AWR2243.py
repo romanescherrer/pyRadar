@@ -4,7 +4,8 @@ from mmwave.dataloader import DCA1000
 import fpga_udp as radar
 import numpy as np
 import datetime
-'''
+
+"""
 # AWR2243采集原始数据的一般流程
 1. 重置雷达与DCA1000(reset_radar、reset_fpga)
 2. 通过SPI初始化雷达并配置相应参数(AWR2243_init、AWR2243_setFrameCfg)(linux下需要root权限)
@@ -37,7 +38,7 @@ The user can change the Ethernet packet delay from 5 µs to 500 µs to achieve d
 "packetDelay_us": 10 (us)   ~   545 (Mbps)
 "packetDelay_us": 25 (us)   ~   325 (Mbps)
 "packetDelay_us": 50 (us)   ~   193 (Mbps)
-'''
+"""
 dca = None
 
 try:
@@ -48,35 +49,48 @@ try:
     dca.reset_fpga()
     print("wait for reset")
     time.sleep(1)
-    
+
     # 2. 通过SPI初始化雷达并配置相应参数
-    radar_config_file = "configFiles/AWR2243_mmwaveconfig.txt"  # laneEn=15则LVDS为4 lane模式
-    dca_config_file = "configFiles/cf.json"  # 若LVDS设置为4 lane模式，记得将cf.json中的lvdsMode设为1
+    radar_config_file = (
+        "configFiles/AWR2243_mmwaveconfig.txt"  # laneEn=15则LVDS为4 lane模式
+    )
+    dca_config_file = (
+        "configFiles/cf.json"  # 若LVDS设置为4 lane模式，记得将cf.json中的lvdsMode设为1
+    )
     radar.AWR2243_init(radar_config_file)
-    numframes=50
-    radar.AWR2243_setFrameCfg(numframes)  # radar设置frame个数后会自动停止，无需向fpga及radar发送停止命令
-    
+    numframes = 50
+    radar.AWR2243_setFrameCfg(
+        numframes
+    )  # radar设置frame个数后会自动停止，无需向fpga及radar发送停止命令
+
     # 检查LVDS参数
-    LVDSDataSizePerChirp_l,maxSendBytesPerChirp_l,ADC_PARAMS_l,CFG_PARAMS_l=dca.AWR2243_read_config(radar_config_file)
+    LVDSDataSizePerChirp_l, maxSendBytesPerChirp_l, ADC_PARAMS_l, CFG_PARAMS_l = (
+        dca.AWR2243_read_config(radar_config_file)
+    )
     dca.refresh_parameter()
     print(ADC_PARAMS_l)
     print(CFG_PARAMS_l)
-    print("LVDSDataSizePerChirp:%d must <= maxSendBytesPerChirp:%d"%(LVDSDataSizePerChirp_l,maxSendBytesPerChirp_l))
+    print(
+        "LVDSDataSizePerChirp:%d must <= maxSendBytesPerChirp:%d"
+        % (LVDSDataSizePerChirp_l, maxSendBytesPerChirp_l)
+    )
     # 检查fpga是否连通正常工作
-    print("System connection check:",dca.sys_alive_check())
+    print("System connection check:", dca.sys_alive_check())
     print(dca.read_fpga_version())
     # 3. 通过网口udp发送配置fpga指令
-    print("Config fpga:",dca.config_fpga(dca_config_file))
+    print("Config fpga:", dca.config_fpga(dca_config_file))
     # 4. 通过网口udp发送配置record数据包指令
-    print("Config record packet delay:",dca.config_record(dca_config_file))
-    
+    print("Config record packet delay:", dca.config_record(dca_config_file))
+
     # 按回车开始采集
     input("press ENTER to start capture...")
 
     # 5. 通过网口udp发送开始采集指令
     dca.stream_start()
     # 6. 启动UDP数据包接收线程
-    numframes_out,sortInC_out = dca.fastRead_in_Cpp_async_start(numframes,sortInC=True)
+    numframes_out, sortInC_out = dca.fastRead_in_Cpp_async_start(
+        numframes, sortInC=True
+    )
 
     # 7. 通过SPI启动雷达
     startTime = datetime.datetime.now()
@@ -88,17 +102,19 @@ try:
     # 8.2 等待雷达采集结束
     radar.AWR2243_waitSensorStop()
     end = time.time()
-    print("time elapsed(s):",end-start)
-    
+    print("time elapsed(s):", end - start)
+
     # 9. 通过网口udp发送停止采集指令
     # dca.stream_stop()  # DCA停止采集，设置frame个数后会自动停止，无需向fpga发送停止命令
 
     # 10. 等待UDP数据包接收线程结束+解析出原始数据
-    data_buf = dca.fastRead_in_Cpp_async_wait(numframes=numframes_out,sortInC=sortInC_out)
+    data_buf = dca.fastRead_in_Cpp_async_wait(
+        numframes=numframes_out, sortInC=sortInC_out
+    )
     # 11. 保存原始数据到文件
-    filename="raw_data_"+startTime.strftime('%Y-%m-%d-%H-%M-%S')+".bin"
+    filename = "raw_data_" + startTime.strftime("%Y-%m-%d-%H-%M-%S") + ".bin"
     data_buf.tofile(filename)
-    print("file saved to",filename)
+    print("file saved to", filename)
 
 except Exception as e:
     traceback.print_exc()

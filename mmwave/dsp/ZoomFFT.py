@@ -22,16 +22,16 @@ import sys
 class ZoomFFT:
     """This class is an implementation of the Zoom Fast Fourier Transform (ZoomFFT).
 
-    The zoom FFT (Fast Fourier Transform) is a signal processing technique used to 
-    analyse a portion of a spectrum at high resolution. The steps to apply the zoom 
+    The zoom FFT (Fast Fourier Transform) is a signal processing technique used to
+    analyse a portion of a spectrum at high resolution. The steps to apply the zoom
     FFT to this region are as follows:
 
-    1. Frequency translate to shift the frequency range of interest down to near 
+    1. Frequency translate to shift the frequency range of interest down to near
        0 Hz (DC)
-    2. Low pass filter to prevent aliasing when subsequently sampled at a lower 
+    2. Low pass filter to prevent aliasing when subsequently sampled at a lower
        sample rate
     3. Re-sample at a lower rate
-    4. FFT the re-sampled data (Multiple blocks of data are needed to have an FFT of 
+    4. FFT the re-sampled data (Multiple blocks of data are needed to have an FFT of
        the same length)
 
     The resulting spectrum will now have a much smaller resolution bandwidth, compared
@@ -75,9 +75,9 @@ class ZoomFFT:
         self.signal = signal
 
     def sinewave(self, f, length, amplitude=1):
-        """Generates a sine wave which could be used as a part of the signal. 
+        """Generates a sine wave which could be used as a part of the signal.
 
-        Args: 
+        Args:
             f (int): Frequency of the sine wave
             length (int): Number of data points in the sine wave
             amplitude (int): Amplitude of the sine wave
@@ -121,9 +121,9 @@ class ZoomFFT:
 
             fig1, ax1 = plt.subplots()
             ax1.stem(fftshift(freq), X / self.length)
-            ax1.set_xlabel('Frequency (Hz)', fontsize=12)
-            ax1.set_ylabel('Magnitude', fontsize=12)
-            ax1.set_title('FFT Two-sided spectrum', fontsize=12)
+            ax1.set_xlabel("Frequency (Hz)", fontsize=12)
+            ax1.set_ylabel("Magnitude", fontsize=12)
+            ax1.set_title("FFT Two-sided spectrum", fontsize=12)
             ax1.grid()
 
             plt.show()
@@ -148,7 +148,9 @@ class ZoomFFT:
             bw_of_interest = self.high_freq - self.low_freq
 
             if self.length % bw_of_interest != 0:
-                logging.warning("length of signal should be divisible by bw_of_interest. Zoom FFT Spectrum may distort!")
+                logging.warning(
+                    "length of signal should be divisible by bw_of_interest. Zoom FFT Spectrum may distort!"
+                )
                 input("Press Enter to continue...")
 
             fc = (self.low_freq + self.high_freq) / 2
@@ -158,12 +160,18 @@ class ZoomFFT:
             ind_vect = np.arange(self.length)
             y = self.signal * np.exp(-1j * 2 * pi * ind_vect * fc / self.fs)
 
-            resample_number = bw_of_interest / self.original_sample_range if resample_number is None else resample_number
+            resample_number = (
+                bw_of_interest / self.original_sample_range
+                if resample_number is None
+                else resample_number
+            )
 
             resample_range = bw_of_interest / resample_number
 
             if resample_range != self.original_sample_range:
-                logging.warning("resample resolution != original sample resolution. Zoom FFT Spectrum may distort!")
+                logging.warning(
+                    "resample resolution != original sample resolution. Zoom FFT Spectrum may distort!"
+                )
                 input("Press Enter to continue...")
 
             xd = signal.resample(y, np.int(resample_number))
@@ -187,20 +195,24 @@ class ZoomFFT:
 
         Args:
             resample_number (int): The number of samples in the resampled signal.
-            
+
         """
         try:
             bw_of_interest = self.high_freq - self.low_freq
-            resample_number = bw_of_interest / self.original_sample_range if resample_number is None else resample_number
+            resample_number = (
+                bw_of_interest / self.original_sample_range
+                if resample_number is None
+                else resample_number
+            )
             Xd, bw_factor, fftlen, Ld, F = self.compute_zoomfft(resample_number)
 
             fig1, ax1 = plt.subplots()
 
-            ax1.stem(F, Xd / Ld, linefmt='C1-.', markerfmt='C1s')
+            ax1.stem(F, Xd / Ld, linefmt="C1-.", markerfmt="C1s")
             ax1.grid()
-            ax1.set_xlabel('Frequency (Hz)', fontsize=12)
-            ax1.set_ylabel('Magnitude', fontsize=12)
-            ax1.set_title('Zoom FFT Spectrum. Mixer Approach.', fontsize=12)
+            ax1.set_xlabel("Frequency (Hz)", fontsize=12)
+            ax1.set_ylabel("Magnitude", fontsize=12)
+            ax1.set_title("Zoom FFT Spectrum. Mixer Approach.", fontsize=12)
             fig1.subplots_adjust(hspace=0.35)
             plt.show()
         except:

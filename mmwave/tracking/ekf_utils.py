@@ -1,6 +1,6 @@
 import numpy as np
 
-'''global constants'''
+"""global constants"""
 
 # Maximum supported configurations
 gtrack_NUM_POINTS_MAX = 1000
@@ -18,14 +18,49 @@ gtrack_MAX_STATIC_BOXES = 2
 MAXNUMBERMEASUREMENTS = 800
 MAXNUMBERTRACKERS = 20
 
-zero3x3 = np.array([0., 0., 0., 0., 0., 0., 0., 0., 0.], dtype=np.float32)
+zero3x3 = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
 
-pinit6x6 = np.array([0., 0., 0., 0., 0., 0.,
-                     0., 0., 0., 0., 0., 0.,
-                     0., 0., 0.5, 0., 0., 0.,
-                     0., 0., 0., 0.5, 0., 0.,
-                     0., 0., 0., 0., 1., 0.,
-                     0., 0., 0., 0., 0., 1.], dtype=np.float32)
+pinit6x6 = np.array(
+    [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.5,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+    ],
+    dtype=np.float32,
+)
 
 VERBOSE_ERROR_INFO = 0x00000001  # /*!< Report Errors */
 VERBOSE_WARNING_INFO = 0x00000002  # /*!< Report Warnings */
@@ -38,11 +73,11 @@ VERBOSE_GATEXY_INFO = 0x00000080  # /*!< Report gating in XY space */
 VERBOSE_GATERA_INFO = 0x00000100  # /*!< Report gating in range/angle space */
 VERBOSE_GATEG1_INFO = 0x00000200  # /*!< Report unitary gating */
 
-'''below is the gtrack alg configuration params'''
+"""below is the gtrack alg configuration params"""
 
 
 # GTRACK Box Structure
-class gtrack_boundaryBox():
+class gtrack_boundaryBox:
     def __init__(self, left, right, bottom, top):
         self.left = left
         self.right = right
@@ -51,17 +86,28 @@ class gtrack_boundaryBox():
 
 
 # GTRACK Scene Parameters
-class gtrack_sceneryParams():
-    def __init__(self, numBoundaryBoxes=0, numStaticBoxes=0, bound_box=[(0, 0, 0, 0), (0, 0, 0, 0)],
-                 static_box=[(0, 0, 0, 0), (0, 0, 0, 0)]):
+class gtrack_sceneryParams:
+    def __init__(
+        self,
+        numBoundaryBoxes=0,
+        numStaticBoxes=0,
+        bound_box=[(0, 0, 0, 0), (0, 0, 0, 0)],
+        static_box=[(0, 0, 0, 0), (0, 0, 0, 0)],
+    ):
         self.numBoundaryBoxes = numBoundaryBoxes
-        self.boundaryBox = [gtrack_boundaryBox(*bound) for bound, _ in zip(bound_box, range(gtrack_MAX_BOUNDARY_BOXES))]
+        self.boundaryBox = [
+            gtrack_boundaryBox(*bound)
+            for bound, _ in zip(bound_box, range(gtrack_MAX_BOUNDARY_BOXES))
+        ]
         self.numStaticBoxes = numStaticBoxes
-        self.staticBox = [gtrack_boundaryBox(*bound) for bound, _ in zip(static_box, range(gtrack_MAX_STATIC_BOXES))]
+        self.staticBox = [
+            gtrack_boundaryBox(*bound)
+            for bound, _ in zip(static_box, range(gtrack_MAX_STATIC_BOXES))
+        ]
 
 
 # GTRACK Gate Limits
-class gtrack_gateLimits():
+class gtrack_gateLimits:
     def __init__(self, length, width, vel):
         self.length = length
         self.width = width
@@ -69,15 +115,22 @@ class gtrack_gateLimits():
 
 
 # GTRACK Gating Function Parameters
-class gtrack_gatingParams():
+class gtrack_gatingParams:
     def __init__(self, volume=2, params=[(3, 2, 0)]):
         self.volume = volume
         self.limits = [gtrack_gateLimits(i, j, k) for (i, j, k) in params]
 
 
 # GTRACK Tracking Management Function Parameters
-class gtrack_stateParams():
-    def __init__(self, det2actThre=3, det2freeThre=3, active2freeThre=5, static2freeThre=5, exit2freeThre=5):
+class gtrack_stateParams:
+    def __init__(
+        self,
+        det2actThre=3,
+        det2freeThre=3,
+        active2freeThre=5,
+        static2freeThre=5,
+        exit2freeThre=5,
+    ):
         self.det2actThre = det2actThre
         self.det2freeThre = det2freeThre
         self.active2freeThre = active2freeThre
@@ -86,16 +139,28 @@ class gtrack_stateParams():
 
 
 # GTRACK Update Function Parameters
-class gtrack_varParams():
-    def __init__(self, lengthStd=np.float32(1 / 3.46), widthStd=np.float32(1 / 3.46), dopplerStd=2.):
+class gtrack_varParams:
+    def __init__(
+        self,
+        lengthStd=np.float32(1 / 3.46),
+        widthStd=np.float32(1 / 3.46),
+        dopplerStd=2.0,
+    ):
         self.lengthStd = lengthStd
         self.widthStd = widthStd
         self.dopplerStd = dopplerStd
 
 
 # GTRACK Allocation Function Parameters
-class gtrack_allocationParams():
-    def __init__(self, snrThre=100., velocityThre=0.5, pointsThre=5, maxDistanceThre=1., maxVelThre=2.):
+class gtrack_allocationParams:
+    def __init__(
+        self,
+        snrThre=100.0,
+        velocityThre=0.5,
+        pointsThre=5,
+        maxDistanceThre=1.0,
+        maxVelThre=2.0,
+    ):
         self.snrThre = snrThre
         self.velocityThre = velocityThre
         self.pointsThre = pointsThre
@@ -104,14 +169,14 @@ class gtrack_allocationParams():
 
 
 # GTRACK Unrolling Parameters
-class gtrack_unrollingParams():
+class gtrack_unrollingParams:
     def __init__(self, alpha=0.5, confidence=0.1):
         self.alpha = alpha
         self.confidence = confidence
 
 
 # GTRACK State Vector
-class gtrack_STATE_VECTOR_TYPE():
+class gtrack_STATE_VECTOR_TYPE:
     def __init__(self):
         self.gtrack_STATE_VECTORS_2D = 0
         self.gtrack_STATE_VECTORS_2DA = 1
@@ -120,7 +185,7 @@ class gtrack_STATE_VECTOR_TYPE():
 
 
 # GTRACK Verbose Level
-class gtrack_VERBOSE_TYPE():
+class gtrack_VERBOSE_TYPE:
     def __init__(self):
         self.gtrack_VERBOSE_NONE = 0
         self.gtrack_VERBOSE_ERROR = 1
@@ -131,7 +196,7 @@ class gtrack_VERBOSE_TYPE():
 
 
 # GTRACK Advanced Parameters
-class gtrack_advancedParameters():
+class gtrack_advancedParameters:
     def __init__(self):
         self.gatingParams = gtrack_gatingParams()
         self.allocationParams = gtrack_allocationParams()
@@ -142,7 +207,7 @@ class gtrack_advancedParameters():
 
 
 # GTRACK Configuration
-class gtrack_moduleConfig():
+class gtrack_moduleConfig:
     def __init__(self):
         self.stateVectorType = gtrack_STATE_VECTOR_TYPE().gtrack_STATE_VECTORS_2DA
         self.verbose = gtrack_VERBOSE_TYPE().gtrack_VERBOSE_NONE
@@ -157,16 +222,16 @@ class gtrack_moduleConfig():
 
 
 # GTRACK Measurement point
-class gtrack_measurementPoint():
+class gtrack_measurementPoint:
     def __init__(self):
-        self.range = 0.
-        self.angle = 0.
-        self.doppler = 0.
-        self.snr = 0.
+        self.range = 0.0
+        self.angle = 0.0
+        self.doppler = 0.0
+        self.snr = 0.0
 
 
 # GTRACK Measurement variances
-class gtrack_measurementVariance():
+class gtrack_measurementVariance:
     def __init__(self):
         self.rangeVar = 0
         self.angleVar = 0
@@ -174,13 +239,14 @@ class gtrack_measurementVariance():
 
 
 # GTRACK target descriptor
-class gtrack_targetDesc():
+class gtrack_targetDesc:
     def __init__(self):
         self.uid = 0
         self.tid = 0
         self.S = np.zeros(shape=(6,), dtype=np.float32)
         self.EC = np.zeros(shape=(9,), dtype=np.float32)
         self.G = 0
+
 
 # /**
 # *  @b Description
@@ -201,14 +267,14 @@ class gtrack_targetDesc():
 # *  @retval
 # *      None
 # */
-'''
+"""
 def gtrack_matrixMakeSymmetrical(m, A, B):
     A = A.reshape(m, m)
 
     B = np.squeeze((1/2 * np.add(A, A.T)).reshape(1, -1))
 
     A = np.squeeze(A.reshape(1, -1))
-'''
+"""
 
 
 def gtrack_matrixMakeSymmetrical(m, A):
@@ -231,7 +297,7 @@ def gtrack_matrixMakeSymmetrical(m, A):
 # /**
 # *  @b Description
 # *  @n
-# *     This function is used to multiply two matrices. 
+# *     This function is used to multiply two matrices.
 # *     Matrices are all real, single precision floating point.
 # *     Matrices are in row-major order
 # *
@@ -253,7 +319,7 @@ def gtrack_matrixMakeSymmetrical(m, A):
 # *  @retval
 # *      None
 # */
-'''
+"""
 def gtrack_matrixMultiply(rows, m, cols, A, B, C):
     A = A.reshape(rows, m)
     B = B.reshape(m, cols)
@@ -262,7 +328,7 @@ def gtrack_matrixMultiply(rows, m, cols, A, B, C):
 
     A = np.squeeze(A.reshape(1, -1))
     B = np.squeeze(B.reshape(1, -1))
-'''
+"""
 
 
 def gtrack_matrixMultiply(rows, m, cols, A, B):
@@ -301,7 +367,7 @@ def gtrack_matrixMultiply(rows, m, cols, A, B):
 # *  @retval
 # *      None
 # */
-'''
+"""
 def gtrack_matrixTransposeMultiply(rows, m, cols, A, B, C):
     A = A.reshape(rows, m)
     B = B.reshape(cols, m)
@@ -310,7 +376,7 @@ def gtrack_matrixTransposeMultiply(rows, m, cols, A, B, C):
 
     A = np.squeeze(A.reshape(1, -1))
     B = np.squeeze(B.reshape(1, -1))
-'''
+"""
 
 
 def gtrack_matrixTransposeMultiply(rows, m, cols, A, B):
@@ -345,7 +411,7 @@ def gtrack_matrixTransposeMultiply(rows, m, cols, A, B):
 # *  @retval
 # *      None
 # */
-'''
+"""
 def gtrack_matrixComputePJT(P, J, PJ):
     P = P.reshape(6, 6)
     J = J.reshape(3, 6)
@@ -354,7 +420,7 @@ def gtrack_matrixComputePJT(P, J, PJ):
 
     P = np.squeeze(P.reshape(1, -1))
     J = np.squeeze(J.reshape(1, -1))
-'''
+"""
 
 
 def gtrack_matrixComputePJT(P, J):
@@ -391,14 +457,14 @@ def gtrack_matrixComputePJT(P, J):
 # *  @retval
 # *      None
 # */
-'''
+"""
 def gtrack_matrixScalerMultiply(rows, cols, A, C, B):
     A = A.reshape(rows, cols)
 
     B = np.squeeze(np.dot(C, A).reshape(1, -1))
 
     A = np.squeeze(A.reshape(1, -1))
-'''
+"""
 
 
 def gtrack_matrixScalerMultiply(rows, cols, A, C):
@@ -433,7 +499,7 @@ def gtrack_matrixScalerMultiply(rows, cols, A, C):
 # *  @retval
 # *      None
 # */
-'''
+"""
 def gtrack_matrixAdd(rows, cols, A, B, C):
     A = A.reshape(rows, cols)
     B = B.reshape(rows, cols)
@@ -442,7 +508,7 @@ def gtrack_matrixAdd(rows, cols, A, B, C):
 
     A = np.squeeze(A.reshape(1, -1))
     B = np.squeeze(B.reshape(1, -1))
-'''
+"""
 
 
 def gtrack_matrixAdd(rows, cols, A, B):
@@ -479,7 +545,7 @@ def gtrack_matrixAdd(rows, cols, A, B):
 # *  @retval
 # *      None
 # */
-'''
+"""
 def gtrack_matrixSub(rows, cols, A, B, C):
     A = A.reshape(rows, cols)
     B = B.reshape(rows, cols)
@@ -488,7 +554,7 @@ def gtrack_matrixSub(rows, cols, A, B, C):
 
     A = np.squeeze(A.reshape(1, -1))
     B = np.squeeze(B.reshape(1, -1))
-'''
+"""
 
 
 def gtrack_matrixSub(rows, cols, A, B):
@@ -519,14 +585,14 @@ def gtrack_matrixSub(rows, cols, A, B):
 # *  @retval
 # *      None
 # */
-'''
+"""
 def gtrack_matrixCholesky3(A, G):
     A = A.reshape(3, 3)
 
     G = np.squeeze(np.linalg.cholesky(A).reshape(1,-1))
 
     A = np.squeeze(A.reshape(1, -1))
-'''
+"""
 
 
 def gtrack_matrixCholesky3(A):
@@ -597,7 +663,6 @@ def gtrack_matrixInv3(A):
     return np.float32(inv)
 
 
-
 def gtrack_spherical2cartesian(format, sph, cart):
     range = np.float32(sph[0])
     azimuth = np.float32(sph[1])
@@ -620,7 +685,10 @@ def gtrack_spherical2cartesian(format, sph, cart):
 
 
 def gtrack_cartesian2spherical(format, cart, sph):
-    if format == gtrack_STATE_VECTOR_TYPE().gtrack_STATE_VECTORS_2D or format == gtrack_STATE_VECTOR_TYPE().gtrack_STATE_VECTORS_2DA:
+    if (
+        format == gtrack_STATE_VECTOR_TYPE().gtrack_STATE_VECTORS_2D
+        or format == gtrack_STATE_VECTOR_TYPE().gtrack_STATE_VECTORS_2DA
+    ):
         posx = np.float32(cart[0])
         posy = np.float32(cart[1])
         velx = np.float32(cart[2])
@@ -653,13 +721,13 @@ def gtrack_computeJacobian(format, cart, jac):
     if format == gtrack_STATE_VECTOR_TYPE().gtrack_STATE_VECTORS_2D:
         jac[0] = np.float32(posx / range)
         jac[1] = np.float32(posy / range)
-        jac[2] = 0.
-        jac[3] = 0.
+        jac[2] = 0.0
+        jac[3] = 0.0
 
         jac[4] = np.float32(posy / range2)
         jac[5] = np.float32(-posx / range2)
-        jac[6] = 0.
-        jac[7] = 0.
+        jac[6] = 0.0
+        jac[7] = 0.0
 
         jac[8] = np.float32((posy * (velx * posy - vely * posx)) / range3)
         jac[9] = np.float32((posx * (vely * posx - velx * posy)) / range3)
@@ -669,22 +737,22 @@ def gtrack_computeJacobian(format, cart, jac):
     elif format == gtrack_STATE_VECTOR_TYPE().gtrack_STATE_VECTORS_2DA:
         jac[0] = np.float32(posx / range)
         jac[1] = np.float32(posy / range)
-        jac[2] = 0.
-        jac[3] = 0.
-        jac[4] = 0.
-        jac[5] = 0.
+        jac[2] = 0.0
+        jac[3] = 0.0
+        jac[4] = 0.0
+        jac[5] = 0.0
         jac[6] = np.float32(posy / range2)
         jac[7] = np.float32(-posx / range2)
-        jac[8] = 0.
-        jac[9] = 0.
-        jac[10] = 0.
-        jac[11] = 0.
+        jac[8] = 0.0
+        jac[9] = 0.0
+        jac[10] = 0.0
+        jac[11] = 0.0
         jac[12] = np.float32((posy * (velx * posy - vely * posx)) / range3)
         jac[13] = np.float32((posx * (vely * posx - velx * posy)) / range3)
         jac[14] = np.float32(posx / range)
         jac[15] = np.float32(posy / range)
-        jac[16] = 0.
-        jac[17] = 0.
+        jac[16] = 0.0
+        jac[17] = 0.0
 
     return
 
@@ -707,10 +775,10 @@ def isPointInsideBox(x, y, box):
         return 0
 
 
-# Simplified Gate Construction (no need for SVD) 
-# We build a gate based on a constant volume 
-# In addition, we impose a limiter: under no circumstances the gate will 
-# allow to reach points beyond gateLimits 
+# Simplified Gate Construction (no need for SVD)
+# We build a gate based on a constant volume
+# In addition, we impose a limiter: under no circumstances the gate will
+# allow to reach points beyond gateLimits
 def gtrack_gateCreateLim(volume, EC, range, gateLim):
     # LQ = np.zeros(shape = (9,))
     # W = np.zeros(shape = (9,))
@@ -732,12 +800,18 @@ def gtrack_gateCreateLim(volume, EC, range, gateLim):
     gMin = gConst
 
     if gateLim[0] != 0:
-        gLimit = np.float32((gateLim[0] * gateLim[0]) / (4 * (W[0] * W[0] + W[3] * W[3] + W[6] * W[6])))
+        gLimit = np.float32(
+            (gateLim[0] * gateLim[0]) / (4 * (W[0] * W[0] + W[3] * W[3] + W[6] * W[6]))
+        )
         if gMin > gLimit:
             gMin = gLimit
 
     if gateLim[1] != 0:
-        sWidth = np.float32(2 * range * np.float32(np.tan(np.float32(np.sqrt(W[4] * W[4] + W[7] * W[7])))))
+        sWidth = np.float32(
+            2
+            * range
+            * np.float32(np.tan(np.float32(np.sqrt(W[4] * W[4] + W[7] * W[7]))))
+        )
         gLimit = np.float32((gateLim[1] * gateLim[1]) / (sWidth * sWidth))
         if gMin > gLimit:
             gMin = gLimit
@@ -751,22 +825,25 @@ def gtrack_gateCreateLim(volume, EC, range, gateLim):
 
 
 def gtrack_computeMahalanobis3(d, S):
-    chi2 = np.float32(d[0] * (d[0] * S[0] + d[1] * S[3] + d[2] * S[6]) + \
-                      d[1] * (d[0] * S[1] + d[1] * S[4] + d[2] * S[7]) + \
-                      d[2] * (d[0] * S[2] + d[1] * S[5] + d[2] * S[8]))
+    chi2 = np.float32(
+        d[0] * (d[0] * S[0] + d[1] * S[3] + d[2] * S[6])
+        + d[1] * (d[0] * S[1] + d[1] * S[4] + d[2] * S[7])
+        + d[2] * (d[0] * S[2] + d[1] * S[5] + d[2] * S[8])
+    )
     return chi2
 
+
 # GTRACK Unit Parameters structure
-class TrackingParams():
+class TrackingParams:
     def __init__(self):
         self.uid = 0
         self.stateVectorType = gtrack_STATE_VECTOR_TYPE()
         self.verbose = 0
-        self.initialRadialVelocity = 0.
-        self.maxRadialVelocity = 0.
-        self.radialVelocityResolution = 0.
-        self.maxAcceleration = 0.
-        self.deltaT = 0.
+        self.initialRadialVelocity = 0.0
+        self.maxRadialVelocity = 0.0
+        self.radialVelocityResolution = 0.0
+        self.maxAcceleration = 0.0
+        self.deltaT = 0.0
 
         self.gatingParams = gtrack_gatingParams()
         self.allocationParams = gtrack_allocationParams()
@@ -782,7 +859,7 @@ class TrackingParams():
 
 
 # GTRACK Unit State
-class TrackState():
+class TrackState:
     def __init__(self):
         self.TRACK_STATE_FREE = 0
         self.TRACK_STATE_INIT = 1
@@ -791,7 +868,7 @@ class TrackState():
 
 
 # GTRACK Unit Velocity Handling State
-class VelocityHandlingState():
+class VelocityHandlingState:
     def __init__(self):
         self.VELOCITY_INIT = 0
         self.VELOCITY_RATE_FILTER = 1
@@ -800,14 +877,14 @@ class VelocityHandlingState():
 
 
 # GTRACK Unit instance structure
-class GtrackUnitInstance():
+class GtrackUnitInstance:
     def __init__(self):
         self.uid = 0
         self.tid = 0
         self.heartBeatCount = 0
         self.allocationTime = 0
-        self.allocationRange = 0.
-        self.allocationVelocity = 0.
+        self.allocationRange = 0.0
+        self.allocationVelocity = 0.0
         self.associatedPoints = 0
 
         self.state = TrackState()
@@ -826,18 +903,18 @@ class GtrackUnitInstance():
 
         self.velocityHandling = VelocityHandlingState()
 
-        self.initialRadialVelocity = 0.
-        self.maxRadialVelocity = 0.
-        self.radialVelocityResolution = 0.
-        self.rangeRate = 0.
+        self.initialRadialVelocity = 0.0
+        self.maxRadialVelocity = 0.0
+        self.radialVelocityResolution = 0.0
+        self.rangeRate = 0.0
 
         self.detect2activeCount = 0
         self.detect2freeCount = 0
         self.active2freeCount = 0
 
-        self.maxAcceleration = 0.
-        self.processVariance = 0.
-        self.dt = 0.
+        self.maxAcceleration = 0.0
+        self.processVariance = 0.0
+        self.dt = 0.0
 
         self.F4 = None
         self.F6 = None
@@ -855,11 +932,11 @@ class GtrackUnitInstance():
         self.gD = np.zeros(shape=(9,), dtype=np.float32)
         self.gC = np.zeros(shape=(9,), dtype=np.float32)
         self.gC_inv = np.zeros(shape=(9,), dtype=np.float32)
-        self.G = 0.
+        self.G = 0.0
 
 
 # GTRACK Module instance structure
-class GtrackModuleInstance():
+class GtrackModuleInstance:
     def __init__(self):
         self.maxNumPoints = 0
         self.maxNumTracks = 0

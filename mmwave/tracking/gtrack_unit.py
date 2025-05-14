@@ -9,8 +9,9 @@ gtrack_MIN_POINTS_TO_UPDATE_DISPERSION = 3
 gtrack_KNOWN_TARGET_POINTS_THRESHOLD = 50
 
 
-# GTRACK Module calls this function to instantiate GTRACK Unit with desired configuration parameters. 
+# GTRACK Module calls this function to instantiate GTRACK Unit with desired configuration parameters.
 # Function returns a handle, which is used my module to call units' methods
+
 
 def unit_create(params):
     inst = ekf_utils.GtrackUnitInstance()
@@ -34,12 +35,17 @@ def unit_create(params):
     inst.F6 = params.F6
     inst.Q6 = params.Q6
 
-    if params.stateVectorType == ekf_utils.gtrack_STATE_VECTOR_TYPE().gtrack_STATE_VECTORS_2DA:
-        inst.stateVectorType = ekf_utils.gtrack_STATE_VECTOR_TYPE().gtrack_STATE_VECTORS_2DA
+    if (
+        params.stateVectorType
+        == ekf_utils.gtrack_STATE_VECTOR_TYPE().gtrack_STATE_VECTORS_2DA
+    ):
+        inst.stateVectorType = (
+            ekf_utils.gtrack_STATE_VECTOR_TYPE().gtrack_STATE_VECTORS_2DA
+        )
         inst.stateVectorLength = 6
         inst.measurementVectorLength = 3
     else:
-        raise ValueError('not supported, unit_create')
+        raise ValueError("not supported, unit_create")
 
     inst.dt = params.deltaT
     inst.state = ekf_utils.TrackState().TRACK_STATE_FREE
@@ -47,7 +53,7 @@ def unit_create(params):
     return inst
 
 
-# GTRACK Module calls this function to run GTRACK unit prediction step 
+# GTRACK Module calls this function to run GTRACK unit prediction step
 def unit_predict(handle):
     inst = handle
     inst.heartBeatCount += 1
@@ -59,10 +65,14 @@ def unit_predict(handle):
     sLen = inst.stateVectorLength
 
     if inst.processVariance != 0:
-        inst.S_apriori_hat = ekf_utils.gtrack_matrixMultiply(sLen, sLen, 1, inst.F, inst.S_hat)
+        inst.S_apriori_hat = ekf_utils.gtrack_matrixMultiply(
+            sLen, sLen, 1, inst.F, inst.S_hat
+        )
         temp1 = ekf_utils.gtrack_matrixMultiply(6, 6, 6, inst.F, inst.P_hat)
         temp2 = ekf_utils.gtrack_matrixTransposeMultiply(6, 6, 6, temp1, inst.F)
-        temp1 = ekf_utils.gtrack_matrixScalerMultiply(sLen, sLen, inst.Q, inst.processVariance)
+        temp1 = ekf_utils.gtrack_matrixScalerMultiply(
+            sLen, sLen, inst.Q, inst.processVariance
+        )
         temp3 = ekf_utils.gtrack_matrixAdd(sLen, sLen, temp1, temp2)
 
         inst.P_apriori_hat = ekf_utils.gtrack_matrixMakeSymmetrical(sLen, temp3)
@@ -70,7 +80,9 @@ def unit_predict(handle):
         inst.S_apriori_hat = copy.deepcopy(inst.S_hat)
         inst.P_apriori_hat = copy.deepcopy(inst.P_hat)
 
-    ekf_utils.gtrack_cartesian2spherical(inst.stateVectorType, inst.S_apriori_hat, inst.H_s)
+    ekf_utils.gtrack_cartesian2spherical(
+        inst.stateVectorType, inst.S_apriori_hat, inst.H_s
+    )
 
 
 # GTRACK Module calls this function to obtain the measurement vector scoring from the GTRACK unit perspective
@@ -87,7 +99,9 @@ def unit_score(handle, point, best_score, best_ind, num):
     if inst.processVariance == 0:
         inst.G = 1
     else:
-        inst.G = ekf_utils.gtrack_gateCreateLim(inst.gatingParams.volume, inst.gC_inv, inst.H_s[0], limits)
+        inst.G = ekf_utils.gtrack_gateCreateLim(
+            inst.gatingParams.volume, inst.gC_inv, inst.H_s[0], limits
+        )
 
     det = ekf_utils.gtrack_matrixDet3(inst.gC)
 
@@ -102,12 +116,15 @@ def unit_score(handle, point, best_score, best_ind, num):
 
         if inst.velocityHandling < ekf_utils.VelocityHandlingState().VELOCITY_LOCKED:
             # Radial velocity estimation is not yet known, unroll based on velocity measured at allocation time
-            rv_out = ekf_utils.gtrack_unrollRadialVelocity(inst.maxRadialVelocity, inst.allocationVelocity,
-                                                          point[n].doppler)
+            rv_out = ekf_utils.gtrack_unrollRadialVelocity(
+                inst.maxRadialVelocity, inst.allocationVelocity, point[n].doppler
+            )
             u_tilda[2] = np.float32(rv_out - inst.allocationVelocity)
         else:
-            # Radial velocity estimation is known 
-            rv_out = ekf_utils.gtrack_unrollRadialVelocity(inst.maxRadialVelocity, inst.H_s[2], point[n].doppler)
+            # Radial velocity estimation is known
+            rv_out = ekf_utils.gtrack_unrollRadialVelocity(
+                inst.maxRadialVelocity, inst.H_s[2], point[n].doppler
+            )
             u_tilda[2] = np.float32(rv_out - inst.H_s[2])
 
         chi2 = ekf_utils.gtrack_computeMahalanobis3(u_tilda, inst.gC_inv)
@@ -122,7 +139,7 @@ def unit_score(handle, point, best_score, best_ind, num):
 
 
 # GTRACK Module calls this function to start target tracking. This function is called during modules' allocation step,
-# once new set of points passes allocation thresholds 
+# once new set of points passes allocation thresholds
 def unit_start(handle, time_stamp, tid, um):
     inst = handle
 
@@ -136,7 +153,9 @@ def unit_start(handle, time_stamp, tid, um):
     inst.associatedPoints = 0
 
     inst.state = ekf_utils.TrackState().TRACK_STATE_DETECTION
-    inst.currentStateVectorType = ekf_utils.gtrack_STATE_VECTOR_TYPE().gtrack_STATE_VECTORS_2DA
+    inst.currentStateVectorType = (
+        ekf_utils.gtrack_STATE_VECTOR_TYPE().gtrack_STATE_VECTORS_2DA
+    )
     inst.stateVectorLength = 6
 
     inst.processVariance = (0.5 * inst.maxAcceleration) * (0.5 * inst.maxAcceleration)
@@ -146,22 +165,26 @@ def unit_start(handle, time_stamp, tid, um):
 
     inst.velocityHandling = ekf_utils.VelocityHandlingState().VELOCITY_INIT
 
-    m[2] = ekf_utils.gtrack_unrollRadialVelocity(inst.maxRadialVelocity, inst.initialRadialVelocity, um[2])
+    m[2] = ekf_utils.gtrack_unrollRadialVelocity(
+        inst.maxRadialVelocity, inst.initialRadialVelocity, um[2]
+    )
 
     inst.rangeRate = m[2]
 
     m[0] = um[0]
     m[1] = um[1]
 
-    ekf_utils.gtrack_spherical2cartesian(inst.currentStateVectorType, m, inst.S_apriori_hat)
+    ekf_utils.gtrack_spherical2cartesian(
+        inst.currentStateVectorType, m, inst.S_apriori_hat
+    )
     inst.H_s = copy.deepcopy(m)
 
     inst.P_apriori_hat = copy.deepcopy(ekf_utils.pinit6x6)
     inst.gD = copy.deepcopy(ekf_utils.zero3x3)
-    inst.G = 1.
+    inst.G = 1.0
 
 
-# GTRACK Module calls this function to perform an update step for the tracking unit. 
+# GTRACK Module calls this function to perform an update step for the tracking unit.
 def unit_update(handle, point, var, pInd, num):
     J = np.zeros(shape=(18,), dtype=np.float32)  # 3x6
     PJ = np.zeros(shape=(18,), dtype=np.float32)  # 6x3
@@ -201,14 +224,17 @@ def unit_update(handle, point, var, pInd, num):
                 rvPilot = point[n].doppler
                 u_mean.doppler = rvPilot
             else:
-                rvCurrent = ekf_utils.gtrack_unrollRadialVelocity(inst.maxRadialVelocity, rvPilot, point[n].doppler)
+                rvCurrent = ekf_utils.gtrack_unrollRadialVelocity(
+                    inst.maxRadialVelocity, rvPilot, point[n].doppler
+                )
                 point[n].doppler = rvCurrent
                 u_mean.doppler += rvCurrent
 
     if myPointNum == 0:
         # INACTIVE
-        if (np.abs(inst.S_hat[2]) < inst.radialVelocityResolution) and \
-                (np.abs(inst.S_hat[3]) < inst.radialVelocityResolution):
+        if (np.abs(inst.S_hat[2]) < inst.radialVelocityResolution) and (
+            np.abs(inst.S_hat[3]) < inst.radialVelocityResolution
+        ):
             inst.S_hat = np.zeros(shape=(inst.S_hat.shape), dtype=np.float32)
 
             inst.S_hat[0] = inst.S_apriori_hat[0]
@@ -227,7 +253,9 @@ def unit_update(handle, point, var, pInd, num):
     inst.associatedPoints += myPointNum
 
     if inst.processVariance == 0:
-        inst.processVariance = np.float32((0.5 * (inst.maxAcceleration)) * (0.5 * (inst.maxAcceleration)))
+        inst.processVariance = np.float32(
+            (0.5 * (inst.maxAcceleration)) * (0.5 * (inst.maxAcceleration))
+        )
 
     u_mean.range = np.float32(u_mean.range / myPointNum)
     u_mean.angle = np.float32(u_mean.angle / myPointNum)
@@ -238,11 +266,18 @@ def unit_update(handle, point, var, pInd, num):
         Rm[4] = np.float32(Rm[4] / myPointNum)
         Rm[8] = np.float32(Rm[8] / myPointNum)
     else:
-        dRangeVar = np.float32((inst.variationParams.lengthStd) * (inst.variationParams.lengthStd))
-        dDopplerVar = np.float32((inst.variationParams.dopplerStd) * (inst.variationParams.dopplerStd))
+        dRangeVar = np.float32(
+            (inst.variationParams.lengthStd) * (inst.variationParams.lengthStd)
+        )
+        dDopplerVar = np.float32(
+            (inst.variationParams.dopplerStd) * (inst.variationParams.dopplerStd)
+        )
 
         Rm[0] = dRangeVar
-        angleStd = np.float32(2 * np.float32(np.arctan(0.5 * (inst.variationParams.widthStd) / inst.H_s[0])))
+        angleStd = np.float32(
+            2
+            * np.float32(np.arctan(0.5 * (inst.variationParams.widthStd) / inst.H_s[0]))
+        )
         Rm[4] = angleStd * angleStd
         Rm[8] = dDopplerVar
 
@@ -255,12 +290,27 @@ def unit_update(handle, point, var, pInd, num):
     if myPointNum > gtrack_MIN_POINTS_TO_UPDATE_DISPERSION:
         for n in range(num):
             if pInd[n] == inst.uid:
-                D[0] += np.float32((point[n].range - u_mean.range) * (point[n].range - u_mean.range))
-                D[4] += np.float32((point[n].angle - u_mean.angle) * (point[n].angle - u_mean.angle))
-                D[8] += np.float32((point[n].doppler - u_mean.doppler) * (point[n].doppler - u_mean.doppler))
-                D[1] += np.float32((point[n].range - u_mean.range) * (point[n].angle - u_mean.angle))
-                D[2] += np.float32((point[n].range - u_mean.range) * (point[n].doppler - u_mean.doppler))
-                D[5] += np.float32((point[n].angle - u_mean.angle) * (point[n].doppler - u_mean.doppler))
+                D[0] += np.float32(
+                    (point[n].range - u_mean.range) * (point[n].range - u_mean.range)
+                )
+                D[4] += np.float32(
+                    (point[n].angle - u_mean.angle) * (point[n].angle - u_mean.angle)
+                )
+                D[8] += np.float32(
+                    (point[n].doppler - u_mean.doppler)
+                    * (point[n].doppler - u_mean.doppler)
+                )
+                D[1] += np.float32(
+                    (point[n].range - u_mean.range) * (point[n].angle - u_mean.angle)
+                )
+                D[2] += np.float32(
+                    (point[n].range - u_mean.range)
+                    * (point[n].doppler - u_mean.doppler)
+                )
+                D[5] += np.float32(
+                    (point[n].angle - u_mean.angle)
+                    * (point[n].doppler - u_mean.doppler)
+                )
 
         D[0] = np.float32(D[0] / myPointNum)
         D[4] = np.float32(D[4] / myPointNum)
@@ -274,20 +324,22 @@ def unit_update(handle, point, var, pInd, num):
         if alpha < gtrack_MIN_DISPERSION_ALPHA:
             alpha = gtrack_MIN_DISPERSION_ALPHA
 
-        inst.gD[0] = np.float32((1. - alpha) * inst.gD[0] + alpha * D[0])
-        inst.gD[1] = np.float32((1. - alpha) * inst.gD[1] + alpha * D[1])
-        inst.gD[2] = np.float32((1. - alpha) * inst.gD[2] + alpha * D[2])
+        inst.gD[0] = np.float32((1.0 - alpha) * inst.gD[0] + alpha * D[0])
+        inst.gD[1] = np.float32((1.0 - alpha) * inst.gD[1] + alpha * D[1])
+        inst.gD[2] = np.float32((1.0 - alpha) * inst.gD[2] + alpha * D[2])
         inst.gD[3] = np.float32(inst.gD[1])
-        inst.gD[4] = np.float32((1. - alpha) * inst.gD[4] + alpha * D[4])
-        inst.gD[5] = np.float32((1. - alpha) * inst.gD[5] + alpha * D[5])
+        inst.gD[4] = np.float32((1.0 - alpha) * inst.gD[4] + alpha * D[4])
+        inst.gD[5] = np.float32((1.0 - alpha) * inst.gD[5] + alpha * D[5])
         inst.gD[6] = np.float32(inst.gD[2])
         inst.gD[7] = np.float32(inst.gD[5])
-        inst.gD[8] = np.float32((1. - alpha) * inst.gD[8] + alpha * D[8])
+        inst.gD[8] = np.float32((1.0 - alpha) * inst.gD[8] + alpha * D[8])
 
     if myPointNum > gtrack_EST_POINTS:
         alpha = 0
     else:
-        alpha = np.float32((gtrack_EST_POINTS - myPointNum) / ((gtrack_EST_POINTS - 1) * myPointNum))
+        alpha = np.float32(
+            (gtrack_EST_POINTS - myPointNum) / ((gtrack_EST_POINTS - 1) * myPointNum)
+        )
 
     Rc[0] = np.float32((Rm[0] / myPointNum) + alpha * (inst.gD[0]))
     Rc[4] = np.float32((Rm[4] / myPointNum) + alpha * (inst.gD[4]))
@@ -329,12 +381,20 @@ def velocity_state_handling(handle, um):
     if inst.velocityHandling == ekf_utils.VelocityHandlingState().VELOCITY_INIT:
         um[2] = inst.rangeRate
         inst.velocityHandling = ekf_utils.VelocityHandlingState().VELOCITY_RATE_FILTER
-    elif inst.velocityHandling == ekf_utils.VelocityHandlingState().VELOCITY_RATE_FILTER:
+    elif (
+        inst.velocityHandling == ekf_utils.VelocityHandlingState().VELOCITY_RATE_FILTER
+    ):
         instanteneousRangeRate = np.float32(
-            (um[0] - inst.allocationRange) / ((inst.heartBeatCount - inst.allocationTime) * (inst.dt)))
-        inst.rangeRate = np.float32((inst.unrollingParams.alpha) * (inst.rangeRate) + (
-                1 - (inst.unrollingParams.alpha)) * instanteneousRangeRate)
-        um[2] = ekf_utils.gtrack_unrollRadialVelocity(inst.maxRadialVelocity, inst.rangeRate, rvIn)
+            (um[0] - inst.allocationRange)
+            / ((inst.heartBeatCount - inst.allocationTime) * (inst.dt))
+        )
+        inst.rangeRate = np.float32(
+            (inst.unrollingParams.alpha) * (inst.rangeRate)
+            + (1 - (inst.unrollingParams.alpha)) * instanteneousRangeRate
+        )
+        um[2] = ekf_utils.gtrack_unrollRadialVelocity(
+            inst.maxRadialVelocity, inst.rangeRate, rvIn
+        )
 
         rrError = np.float32((instanteneousRangeRate - inst.rangeRate) / inst.rangeRate)
 
@@ -342,16 +402,24 @@ def velocity_state_handling(handle, um):
             inst.velocityHandling = ekf_utils.VelocityHandlingState().VELOCITY_TRACKING
     elif inst.velocityHandling == ekf_utils.VelocityHandlingState().VELOCITY_TRACKING:
         instanteneousRangeRate = np.float32(
-            (um[0] - inst.allocationRange) / ((inst.heartBeatCount - inst.allocationTime) * inst.dt))
+            (um[0] - inst.allocationRange)
+            / ((inst.heartBeatCount - inst.allocationTime) * inst.dt)
+        )
 
         inst.rangeRate = np.float32(
-            (inst.unrollingParams.alpha) * inst.rangeRate + (1 - inst.unrollingParams.alpha) * instanteneousRangeRate)
-        um[2] = ekf_utils.gtrack_unrollRadialVelocity(inst.maxRadialVelocity, inst.rangeRate, rvIn)
+            (inst.unrollingParams.alpha) * inst.rangeRate
+            + (1 - inst.unrollingParams.alpha) * instanteneousRangeRate
+        )
+        um[2] = ekf_utils.gtrack_unrollRadialVelocity(
+            inst.maxRadialVelocity, inst.rangeRate, rvIn
+        )
         rvError = np.float32((inst.H_s[2] - um[2]) / um[2])
         if np.abs(rvError) < 0.1:
             inst.velocityHandling = ekf_utils.VelocityHandlingState().VELOCITY_LOCKED
     elif inst.velocityHandling == ekf_utils.VelocityHandlingState().VELOCITY_LOCKED:
-        um[2] = ekf_utils.gtrack_unrollRadialVelocity(inst.maxRadialVelocity, inst.H_s[2], um[2])
+        um[2] = ekf_utils.gtrack_unrollRadialVelocity(
+            inst.maxRadialVelocity, inst.H_s[2], um[2]
+        )
 
 
 # GTRACK Module calls this function to run GTRACK unit level state machine
@@ -380,8 +448,14 @@ def unit_event(handle, num):
             if inst.sceneryParams.numStaticBoxes != 0:
                 thre = inst.stateParams.exit2freeThre
                 for numBoxes in range(inst.sceneryParams.numStaticBoxes):
-                    if ekf_utils.isPointInsideBox(inst.S_hat[0], inst.S_hat[1],
-                                                  inst.sceneryParams.boundaryBox[numBoxes]) == 1:
+                    if (
+                        ekf_utils.isPointInsideBox(
+                            inst.S_hat[0],
+                            inst.S_hat[1],
+                            inst.sceneryParams.boundaryBox[numBoxes],
+                        )
+                        == 1
+                    ):
                         if inst.processVariance == 0:
                             thre = inst.stateParams.static2freeThre
                         else:

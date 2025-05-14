@@ -62,11 +62,11 @@ def ca(x, *argv, **kwargs):
     if isinstance(x, list):
         x = np.array(x)
     threshold, _ = ca_(x, *argv, **kwargs)
-    ret = (x > threshold)
+    ret = x > threshold
     return ret
 
 
-def ca_(x, guard_len=4, noise_len=8, mode='wrap', l_bound=4000):
+def ca_(x, guard_len=4, noise_len=8, mode="wrap", l_bound=4000):
     """Uses Cell-Averaging CFAR (CA-CFAR) to calculate a threshold that can be used to calculate peaks in a signal.
 
     Args:
@@ -103,8 +103,10 @@ def ca_(x, guard_len=4, noise_len=8, mode='wrap', l_bound=4000):
         x = np.array(x)
     assert type(x) == np.ndarray
 
-    kernel = np.ones(1 + (2 * guard_len) + (2 * noise_len), dtype=x.dtype) / (2 * noise_len)
-    kernel[noise_len:noise_len + (2 * guard_len) + 1] = 0
+    kernel = np.ones(1 + (2 * guard_len) + (2 * noise_len), dtype=x.dtype) / (
+        2 * noise_len
+    )
+    kernel[noise_len : noise_len + (2 * guard_len) + 1] = 0
 
     noise_floor = convolve1d(x, kernel, mode=mode)
     threshold = noise_floor + l_bound
@@ -146,11 +148,11 @@ def caso(x, *argv, **kwargs):
     if isinstance(x, list):
         x = np.array(x)
     threshold, _ = caso_(x, *argv, **kwargs)
-    ret = (x > threshold)
+    ret = x > threshold
     return ret
 
 
-def caso_(x, guard_len=4, noise_len=8, mode='wrap', l_bound=4000):
+def caso_(x, guard_len=4, noise_len=8, mode="wrap", l_bound=4000):
     """Uses Cell-Averaging Smallest-Of CFAR (CASO-CFAR) to calculate a threshold that can be used to calculate peaks in a signal.
 
     Args:
@@ -191,15 +193,15 @@ def caso_(x, guard_len=4, noise_len=8, mode='wrap', l_bound=4000):
     # Generate scaling based on mode
     l_window = l_window / noise_len
     r_window = r_window / noise_len
-    if mode == 'wrap':
+    if mode == "wrap":
         noise_floor = np.minimum(l_window, r_window)
-    elif mode == 'constant':
+    elif mode == "constant":
         edge_cells = guard_len + noise_len
         noise_floor = np.minimum(l_window, r_window)
         noise_floor[:edge_cells] = r_window[:edge_cells]
         noise_floor[-edge_cells:] = l_window[-edge_cells:]
     else:
-        raise ValueError(f'Mode {mode} is not a supported mode')
+        raise ValueError(f"Mode {mode} is not a supported mode")
 
     threshold = noise_floor + l_bound
     return threshold, noise_floor
@@ -239,11 +241,11 @@ def cago(x, *argv, **kwargs):
     if isinstance(x, list):
         x = np.array(x)
     threshold, _ = cago_(x, *argv, **kwargs)
-    ret = (x > threshold)
+    ret = x > threshold
     return ret
 
 
-def cago_(x, guard_len=4, noise_len=8, mode='wrap', l_bound=4000):
+def cago_(x, guard_len=4, noise_len=8, mode="wrap", l_bound=4000):
     """Uses Cell-Averaging Greatest-Of CFAR (CAGO-CFAR) to calculate a threshold that can be used to calculate peaks in a signal.
 
     Args:
@@ -284,15 +286,15 @@ def cago_(x, guard_len=4, noise_len=8, mode='wrap', l_bound=4000):
     # Generate scaling based on mode
     l_window = l_window / noise_len
     r_window = r_window / noise_len
-    if mode == 'wrap':
+    if mode == "wrap":
         noise_floor = np.maximum(l_window, r_window)
-    elif mode == 'constant':
+    elif mode == "constant":
         edge_cells = guard_len + noise_len
         noise_floor = np.maximum(l_window, r_window)
         noise_floor[:edge_cells] = r_window[:edge_cells]
         noise_floor[-edge_cells:] = l_window[-edge_cells:]
     else:
-        raise ValueError(f'Mode {mode} is not a supported mode')
+        raise ValueError(f"Mode {mode} is not a supported mode")
 
     threshold = noise_floor + l_bound
     return threshold, noise_floor
@@ -323,7 +325,7 @@ def os(x, *argv, **kwargs):
     if isinstance(x, list):
         x = np.array(x)
     threshold, _ = os_(x, *argv, **kwargs)
-    ret = (x > threshold)
+    ret = x > threshold
     return ret
 
 
@@ -383,7 +385,7 @@ def os_(x, guard_len=0, noise_len=8, k=12, scale=1.0):
 
 def _cfar_windows(x, guard_len, noise_len, mode):
     if type(x) != np.ndarray:
-        raise TypeError(f'Expected array-like input got {type(x)}')
+        raise TypeError(f"Expected array-like input got {type(x)}")
 
     # Create kernels
     r_kernel = np.zeros(1 + (2 * guard_len) + (2 * noise_len), dtype=x.dtype)
@@ -400,16 +402,20 @@ def _cfar_windows(x, guard_len, noise_len, mode):
 WRAP_UP_LIST_IDX = lambda x, total: x if x >= 0 else x + total
 WRAP_DN_LIST_IDX = lambda x, total: x if x < total else x - total
 WRAP_DOPPLER_IDX = lambda x, num_doppler_bins: np.bitwise_and(x, num_doppler_bins - 1)
-DOPPLER_IDX_TO_SIGNED = lambda idx, fft_size: idx if idx < fft_size // 2 else idx - fft_size
+DOPPLER_IDX_TO_SIGNED = (
+    lambda idx, fft_size: idx if idx < fft_size // 2 else idx - fft_size
+)
 
 
-def peak_grouping(obj_raw,
-                  det_matrix,
-                  num_doppler_bins,
-                  max_range_idx,
-                  min_range_idx,
-                  group_in_doppler_direction,
-                  group_in_range_direction):
+def peak_grouping(
+    obj_raw,
+    det_matrix,
+    num_doppler_bins,
+    max_range_idx,
+    min_range_idx,
+    group_in_doppler_direction,
+    group_in_range_direction,
+):
     """Performs peak grouping on detection Range/Doppler matrix.
 
     The function groups neighboring peaks into one. The grouping is done according to two input flags:
@@ -458,8 +464,13 @@ def peak_grouping(obj_raw,
     else:
         # No grouping, copy all detected objects to the output matrix within specified min max range
         # num_detected_objects = min(num_detected_objects, MAX_OBJ_OUT)
-        obj_out = obj_raw[obj_raw[:, RANGEIDX] <= max_range_idx and obj_raw[:, RANGEIDX] > min_range_idx]
-        obj_out[:, DOPPLERIDX] = np.bitwise_and(obj_out[:, DOPPLERIDX], num_doppler_bins - 1)
+        obj_out = obj_raw[
+            obj_raw[:, RANGEIDX] <= max_range_idx
+            and obj_raw[:, RANGEIDX] > min_range_idx
+        ]
+        obj_out[:, DOPPLERIDX] = np.bitwise_and(
+            obj_out[:, DOPPLERIDX], num_doppler_bins - 1
+        )
 
         return obj_out
 
@@ -495,7 +506,6 @@ def peak_grouping(obj_raw,
 
             for j in range(row_start, row_end + 1):
                 for k in range(3):
-
                     temp_idx = doppler_idx + (k - 1)
 
                     if temp_idx < 0:
@@ -515,7 +525,9 @@ def peak_grouping(obj_raw,
 
         if detected_obj_flag == 1:
             obj_out[num_obj_out, 0] = range_idx
-            obj_out[num_obj_out, 1] = DOPPLER_IDX_TO_SIGNED(doppler_idx, num_doppler_bins)
+            obj_out[num_obj_out, 1] = DOPPLER_IDX_TO_SIGNED(
+                doppler_idx, num_doppler_bins
+            )
             obj_out[num_obj_out, 2] = peak_val
             num_obj_out += 1
 
@@ -525,12 +537,14 @@ def peak_grouping(obj_raw,
     return num_obj_out, obj_out
 
 
-def peak_grouping_qualified(obj_raw,
-                            num_doppler_bins,
-                            max_range_idx,
-                            min_range_idx,
-                            group_in_doppler_direction,
-                            group_in_range_direction):
+def peak_grouping_qualified(
+    obj_raw,
+    num_doppler_bins,
+    max_range_idx,
+    min_range_idx,
+    group_in_doppler_direction,
+    group_in_range_direction,
+):
     """Performs peak grouping on list of CFAR detected objects.
 
     The function groups neighboring peaks into one. The grouping is done according to two input flags:
@@ -574,14 +588,18 @@ def peak_grouping_qualified(obj_raw,
     else:
         # No grouping, copy all detected objects to the output matrix within specified min max range
         num_detected_objects = min(num_detected_objects, MAX_OBJ_OUT)
-        obj_out = obj_raw[(obj_raw['range_idx'][:num_detected_objects] <= max_range_idx) &
-                          (obj_raw['range_idx'][:num_detected_objects] > min_range_idx)]
+        obj_out = obj_raw[
+            (obj_raw["range_idx"][:num_detected_objects] <= max_range_idx)
+            & (obj_raw["range_idx"][:num_detected_objects] > min_range_idx)
+        ]
 
         return obj_out
 
     # Start checking
-    idx_obj_in_range = np.argwhere((obj_raw['range_idx'] <= max_range_idx) &
-                                   (obj_raw['range_idx'] >= min_range_idx))[:, 0]
+    idx_obj_in_range = np.argwhere(
+        (obj_raw["range_idx"] <= max_range_idx)
+        & (obj_raw["range_idx"] >= min_range_idx)
+    )[:, 0]
 
     obj_in_range = obj_raw[idx_obj_in_range]
     kernels = np.zeros((obj_in_range.shape[0], 9))
@@ -589,66 +607,96 @@ def peak_grouping_qualified(obj_raw,
 
     # Populate the middle column.
     # Populate the 4th element.
-    kernels[:, 4] = obj_in_range['peakVal']
+    kernels[:, 4] = obj_in_range["peakVal"]
 
     # Populate the 1st element.
     obj_in_range_previous = obj_raw[idx_obj_in_range - 1]
-    assert obj_in_range_previous.shape == obj_in_range.shape, "obj_in_range_previous indexing is wrong"
-    idx_temp = ((obj_in_range_previous['range_idx']) == (obj_in_range['range_idx'] - 1)) & \
-               ((obj_in_range_previous['doppler_idx']) == (obj_in_range['doppler_idx']))
-    kernels[idx_temp, 1] = obj_in_range_previous['peakVal'][idx_temp]
+    assert obj_in_range_previous.shape == obj_in_range.shape, (
+        "obj_in_range_previous indexing is wrong"
+    )
+    idx_temp = (
+        (obj_in_range_previous["range_idx"]) == (obj_in_range["range_idx"] - 1)
+    ) & ((obj_in_range_previous["doppler_idx"]) == (obj_in_range["doppler_idx"]))
+    kernels[idx_temp, 1] = obj_in_range_previous["peakVal"][idx_temp]
     # 0th detected object has no left neighbor.
     kernels[idx_obj_in_range[idx_obj_in_range[:] == 0], 1] = 0
 
     # Populate the 7th element.
     obj_in_range_next = obj_raw[(idx_obj_in_range + 1) % num_detected_objects]
-    assert obj_in_range_next.shape == obj_in_range.shape, "obj_in_range_next indexing is wrong"
-    idx_temp = ((obj_in_range_next['range_idx']) == (obj_in_range['range_idx'] + 1)) & \
-               ((obj_in_range_next['doppler_idx']) == (obj_in_range['doppler_idx']))
-    kernels[idx_temp, 7] = obj_in_range_next['peakVal'][idx_temp]
+    assert obj_in_range_next.shape == obj_in_range.shape, (
+        "obj_in_range_next indexing is wrong"
+    )
+    idx_temp = ((obj_in_range_next["range_idx"]) == (obj_in_range["range_idx"] + 1)) & (
+        (obj_in_range_next["doppler_idx"]) == (obj_in_range["doppler_idx"])
+    )
+    kernels[idx_temp, 7] = obj_in_range_next["peakVal"][idx_temp]
     # last detected object, i.e. num_detected_objects-th has no left neighbor.
     kernels[idx_obj_in_range[idx_obj_in_range[:] == num_detected_objects], 7] = 0
 
     for i, idxDeteced in enumerate(idx_obj_in_range):
-        doppler_idx = obj_in_range['doppler_idx'][i]
-        range_idx = obj_in_range['range_idx'][i]
+        doppler_idx = obj_in_range["doppler_idx"][i]
+        range_idx = obj_in_range["range_idx"][i]
         # Fill the left column
         k_left = WRAP_UP_LIST_IDX(idxDeteced - 1, num_detected_objects)
         k_right = WRAP_DN_LIST_IDX(idxDeteced + 1, num_detected_objects)
         for _ in range(num_detected_objects):
-            k_left_doppler_idx = obj_raw['doppler_idx'][k_left]
-            k_left_range_idx = obj_raw['range_idx'][k_left]
-            k_left_peak_val = obj_raw['peakVal'][k_left]
-            if k_left_doppler_idx == WRAP_DOPPLER_IDX(doppler_idx - 2, num_doppler_bins):
+            k_left_doppler_idx = obj_raw["doppler_idx"][k_left]
+            k_left_range_idx = obj_raw["range_idx"][k_left]
+            k_left_peak_val = obj_raw["peakVal"][k_left]
+            if k_left_doppler_idx == WRAP_DOPPLER_IDX(
+                doppler_idx - 2, num_doppler_bins
+            ):
                 break
-            if k_left_range_idx == range_idx + 1 and k_left_doppler_idx == WRAP_DOPPLER_IDX(doppler_idx - 1,
-                                                                                            num_doppler_bins):
+            if (
+                k_left_range_idx == range_idx + 1
+                and k_left_doppler_idx
+                == WRAP_DOPPLER_IDX(doppler_idx - 1, num_doppler_bins)
+            ):
                 kernels[i, 6] = k_left_peak_val
-            elif k_left_range_idx == range_idx and k_left_doppler_idx == WRAP_DOPPLER_IDX(doppler_idx - 1,
-                                                                                          num_doppler_bins):
+            elif (
+                k_left_range_idx == range_idx
+                and k_left_doppler_idx
+                == WRAP_DOPPLER_IDX(doppler_idx - 1, num_doppler_bins)
+            ):
                 kernels[i, 3] = k_left_peak_val
-            elif k_left_range_idx == range_idx - 1 and k_left_doppler_idx == WRAP_DOPPLER_IDX(doppler_idx - 1,
-                                                                                              num_doppler_bins):
+            elif (
+                k_left_range_idx == range_idx - 1
+                and k_left_doppler_idx
+                == WRAP_DOPPLER_IDX(doppler_idx - 1, num_doppler_bins)
+            ):
                 kernels[i, 0] = k_left_peak_val
             k_left = WRAP_UP_LIST_IDX(k_left - 1, num_detected_objects)
 
-            k_right_doppler_idx = obj_raw['doppler_idx'][k_right]
-            k_right_range_idx = obj_raw['range_idx'][k_right]
-            k_right_peak_val = obj_raw['peakVal'][k_right]
-            if k_right_doppler_idx == WRAP_DOPPLER_IDX(doppler_idx - 2, num_doppler_bins):
+            k_right_doppler_idx = obj_raw["doppler_idx"][k_right]
+            k_right_range_idx = obj_raw["range_idx"][k_right]
+            k_right_peak_val = obj_raw["peakVal"][k_right]
+            if k_right_doppler_idx == WRAP_DOPPLER_IDX(
+                doppler_idx - 2, num_doppler_bins
+            ):
                 break
-            if k_right_range_idx == range_idx + 1 and k_right_doppler_idx == WRAP_DOPPLER_IDX(doppler_idx + 1,
-                                                                                              num_doppler_bins):
+            if (
+                k_right_range_idx == range_idx + 1
+                and k_right_doppler_idx
+                == WRAP_DOPPLER_IDX(doppler_idx + 1, num_doppler_bins)
+            ):
                 kernels[i, 8] = k_right_peak_val
-            elif k_right_range_idx == range_idx and k_right_doppler_idx == WRAP_DOPPLER_IDX(doppler_idx + 1,
-                                                                                            num_doppler_bins):
+            elif (
+                k_right_range_idx == range_idx
+                and k_right_doppler_idx
+                == WRAP_DOPPLER_IDX(doppler_idx + 1, num_doppler_bins)
+            ):
                 kernels[i, 5] = k_right_peak_val
-            elif k_right_range_idx == range_idx - 1 and k_right_doppler_idx == WRAP_DOPPLER_IDX(doppler_idx + 1,
-                                                                                                num_doppler_bins):
+            elif (
+                k_right_range_idx == range_idx - 1
+                and k_right_doppler_idx
+                == WRAP_DOPPLER_IDX(doppler_idx + 1, num_doppler_bins)
+            ):
                 kernels[i, 2] = k_right_peak_val
             k_right = WRAP_DN_LIST_IDX(k_right + 1, num_detected_objects)
 
-    detected_obj_flag[np.argwhere(np.max(kernels[:, start_ind:end_ind:step_ind]) != kernels[:, 4])] = 0
+    detected_obj_flag[
+        np.argwhere(np.max(kernels[:, start_ind:end_ind:step_ind]) != kernels[:, 4])
+    ] = 0
     obj_out = obj_in_range[detected_obj_flag[:] == 1]
 
     if obj_out.shape[0] > MAX_OBJ_OUT:

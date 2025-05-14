@@ -14,8 +14,10 @@ import numpy as np
 from . import utils
 
 
-def range_resolution(num_adc_samples, dig_out_sample_rate=2500, freq_slope_const=60.012):
-    """ Calculate the range resolution for the given radar configuration
+def range_resolution(
+    num_adc_samples, dig_out_sample_rate=2500, freq_slope_const=60.012
+):
+    """Calculate the range resolution for the given radar configuration
 
     Args:
         num_adc_samples (int): The number of given ADC samples in a chirp
@@ -46,11 +48,11 @@ def range_processing(adc_data, window_type_1d=None, axis=-1):
                             is in complex by default. Complex is float32/float32 by default.
         window_type_1d (mmwave.dsp.utils.Window): Optional window type on 1D FFT input. Default is None. Can be selected
                                                 from Bartlett, Blackman, Hanning and Hamming.
-    
+
     Returns:
         radar_cube (ndarray): (num_chirps_per_frame, num_rx_antennas, num_range_bins). Also called fft_1d_out
     """
-    # windowing numA x numB suggests the coefficients is numA-bits while the 
+    # windowing numA x numB suggests the coefficients is numA-bits while the
     # input and output are numB-bits. Same rule applies to the FFT.
     fft1d_window_type = window_type_1d
     if fft1d_window_type:
@@ -77,7 +79,7 @@ def zoom_range_processing(adc_data, low_freq, high_freq, fs, d, resample_number)
         fs (int) : sampling rate of the original signal
         d (int): Sample spacing (inverse of the sampling rate)
         resample_number (int): The number of samples in the re-sampled signal.
-    
+
     Returns:
         zoom_fft_spectrum (ndarray): (num_chirps_per_frame, num_rx_antennas, resample_number).
     """
@@ -86,7 +88,9 @@ def zoom_range_processing(adc_data, low_freq, high_freq, fs, d, resample_number)
     num_rx_antennas = adc_data.shape[1]
     # num_range_bins = adc_data.shape[2]
 
-    zoom_fft_spectrum = np.zeros(shape=(num_chirps_per_frame, num_rx_antennas, resample_number))
+    zoom_fft_spectrum = np.zeros(
+        shape=(num_chirps_per_frame, num_rx_antennas, resample_number)
+    )
 
     for i in range(num_chirps_per_frame):
         for j in range(num_rx_antennas):
@@ -98,5 +102,5 @@ def zoom_range_processing(adc_data, low_freq, high_freq, fs, d, resample_number)
 
 
 def zoom_fft_visualize(zoom_fft_spectrum, antenna_idx, range_bin_idx):
-    '''to be implemented'''
+    """to be implemented"""
     pass

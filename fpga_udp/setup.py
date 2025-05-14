@@ -16,43 +16,60 @@ __version__ = "1.3.0"
 #   reproducible builds (https://github.com/pybind/python_example/pull/53)
 
 ext_modules = [
-    Pybind11Extension("fpga_udp",
-        ["src/main.cpp"]+
+    Pybind11Extension(
+        "fpga_udp",
+        ["src/main.cpp"]
+        +
         # serial port lib
-        ["src/WzSerialportPlus/"+platform.system()+"/WzSerialportPlus.cpp"]+
+        ["src/WzSerialportPlus/" + platform.system() + "/WzSerialportPlus.cpp"]
+        +
         # mmwave DFP SingleChip NonOS demo
-        sorted(glob("src/mmwaveDFP_2G/ti/example/mmWaveLink_SingleChip_NonOS_Example/*.cpp"))+
-        sorted(glob("src/mmwaveDFP_2G/ti/example/mmWaveLink_SingleChip_NonOS_Example/*.c"))+
+        sorted(
+            glob(
+                "src/mmwaveDFP_2G/ti/example/mmWaveLink_SingleChip_NonOS_Example/*.cpp"
+            )
+        )
+        + sorted(
+            glob("src/mmwaveDFP_2G/ti/example/mmWaveLink_SingleChip_NonOS_Example/*.c")
+        )
+        +
         # mmwave DFP mmWaveLink Library
-        sorted(glob("src/mmwaveDFP_2G/ti/control/mmwavelink/src/*.c"))+
+        sorted(glob("src/mmwaveDFP_2G/ti/control/mmwavelink/src/*.c"))
+        +
         # mmwave DFP mmWaveLink FTDI Library
-        ["src/mmwaveDFP_2G/FTDILib/SourceCode/mmwl_port_ftdi.cpp"]+
+        ["src/mmwaveDFP_2G/FTDILib/SourceCode/mmwl_port_ftdi.cpp"]
+        +
         # pevents Library
         ["src/pevents/pevents.cpp"],
-
-                       # serial port lib
-        include_dirs = ["src/WzSerialportPlus/"+platform.system()]+
-                       # mmwave DFP SingleChip NonOS demo
-                       sorted(glob("src/mmwaveDFP_2G/ti/example/mmWaveLink_SingleChip_NonOS_Example/"))+
-                       # mmwave DFP mmWaveLink Library
-                       ["src/mmwaveDFP_2G/ti/control/mmwavelink/"]+
-                       sorted(glob("src/mmwaveDFP_2G/ti/control/mmwavelink/include/"))+
-                       # mmwave DFP mmWaveLink FTDI Library
-                       ["src/mmwaveDFP_2G/FTDILib/SourceCode/"]+
-                       ["src/FTDI_D2XX/"+platform.system()]+
-                       # mmwave DFP firmware
-                       ["src/mmwaveDFP_2G/firmware/"]+
-                       # pevents Library
-                       ["src/pevents/"]+
-                       # kfifo Library
-                       ["src/kfifo/"],
-        library_dirs = ["src/FTDI_D2XX/"+platform.system()+"/"+platform.machine()],
-        libraries=['ftd2xx'],
+        # serial port lib
+        include_dirs=["src/WzSerialportPlus/" + platform.system()]
+        +
+        # mmwave DFP SingleChip NonOS demo
+        sorted(glob("src/mmwaveDFP_2G/ti/example/mmWaveLink_SingleChip_NonOS_Example/"))
+        +
+        # mmwave DFP mmWaveLink Library
+        ["src/mmwaveDFP_2G/ti/control/mmwavelink/"]
+        + sorted(glob("src/mmwaveDFP_2G/ti/control/mmwavelink/include/"))
+        +
+        # mmwave DFP mmWaveLink FTDI Library
+        ["src/mmwaveDFP_2G/FTDILib/SourceCode/"]
+        + ["src/FTDI_D2XX/" + platform.system()]
+        +
+        # mmwave DFP firmware
+        ["src/mmwaveDFP_2G/firmware/"]
+        +
+        # pevents Library
+        ["src/pevents/"]
+        +
+        # kfifo Library
+        ["src/kfifo/"],
+        library_dirs=["src/FTDI_D2XX/" + platform.system() + "/" + platform.machine()],
+        libraries=["ftd2xx"],
         # extra_compile_args=['-g'],
         # Example: passing in the version to the compiled code
-        define_macros = [('VERSION_INFO', __version__),('NOMINMAX',1)],
-        language='c++',
-        cxx_std=17
+        define_macros=[("VERSION_INFO", __version__), ("NOMINMAX", 1)],
+        language="c++",
+        cxx_std=17,
     ),
 ]
 
